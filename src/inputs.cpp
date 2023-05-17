@@ -430,9 +430,20 @@ std::vector<std::string> Inputs::get_omniweb_files() {
   int nFiles = settings["OmniwebFiles"].size();
 
   for (int i = 0; i < nFiles; i++)
-    omniweb_files.push_back(settings.at("OmniwebFiles").at(i));
+    omniweb_files.push_back(swap_NNNN(settings.at("OmniwebFiles").at(i)));
 
   return omniweb_files;
+}
+
+// -----------------------------------------------------------------------
+// Checks for "NNNN" in filename and replaces it with cMember
+// -----------------------------------------------------------------------
+
+std::string Inputs::swap_NNNN(std::string filename) {
+  if (filename.find("NNNN") != std::string::npos)
+    filename.replace(filename.find("NNNN"), 4, cMember.substr(1));
+
+  return filename;
 }
 
 // -----------------------------------------------------------------------

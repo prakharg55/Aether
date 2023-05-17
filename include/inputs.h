@@ -28,6 +28,7 @@ public:
   std::string get_chemistry_file();
   std::string get_indices_lookup_file();
   std::vector<std::string> get_omniweb_files();
+  std::string swap_NNNN(std::string filename);
   int get_number_of_omniweb_files();
   std::string get_f107_file();
   std::string get_planet();
