@@ -71,3 +71,12 @@ When Aether is run, it will create and perturb all of the ensemble
 members, outputting member files with the addition of "_m0NML", where
 NML is the member number.  These files can be viewed on their own, or
 the post processing code can create mean and std files.
+
+Otherwise, if the user wants to control inputs with the ensembles
+themselves, then they can create input files and then have the code
+read those files based on the ensemble number. If the user passes the
+input file name ending with "NNNN", Aether would recognize "NNNN" as
+needing to substitute "0000", "0001", "0002", etc. for the ensemble
+number:
+
+	"OmniwebFiles" : ["UA/inputs/omni_20110319_NNNN.txt"]
