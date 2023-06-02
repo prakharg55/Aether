@@ -657,7 +657,7 @@ def plot_all_blocks(allBlockData, varToPlot, altToPlot, plotFile):
 # Read all of the block files in, given the core filename
 #----------------------------------------------------------------------------
 
-def read_block_files(coreFile, isNetCDF):
+def read_block_files(coreFile, isNetCDF=False):
     print('Figuring out coreFile : ', coreFile)
     if (isNetCDF):
         fileList = sorted(glob(coreFile + '_g*.nc'))

@@ -6,7 +6,7 @@
 	"dt" : 10.0},
 
     "Ensembles" : {
-        "nMembers" : 4},
+        "nMembers" : 3},
 
     "CubeSphere" : {
         "is" : false},
