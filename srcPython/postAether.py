@@ -697,10 +697,18 @@ def get_sizes(allBlockData):
 # Write a NetCDF file from the data
 #----------------------------------------------------------------------------
 
-def write_netcdf(allBlockData, fileName):
+def write_netcdf(allBlockData, fileName, isEnsemble,
+                 ensembleNumber, ensembleMembers):
 
     print('  Outputting file : ', fileName)
     ncfile = Dataset(fileName, 'w')
+
+    if isEnsemble:
+        ncfile.isEnsemble = "True"
+        ncfile.ensembleNumber = str(ensembleNumber)
+        ncfile.ensembleMembers = str(ensembleMembers)
+    else:
+        ncfile.isEnsemble = "False"
 
     nBlocks = len(allBlockData)
     nLons, nLats, nZ = get_sizes(allBlockData)
@@ -855,10 +863,14 @@ def write_and_plot_data(dataToWrite,
                         fileStart,
                         fileAddon,
                         iVar,
-                        iAlt):
+                        iAlt,
+                        isEnsemble = False,
+                        ensembleNumber = 0,
+                        ensembleMembers = 0):
 
     netcdfFile = fileStart + fileAddon + '.nc'
-    write_netcdf(dataToWrite, netcdfFile)
+    write_netcdf(dataToWrite, netcdfFile, isEnsemble,
+                 ensembleNumber, ensembleMembers)
 
     plotFile = fileStart + fileAddon + '.png'
     var = dataToWrite[0]['vars'][iVar]
@@ -884,7 +896,9 @@ if __name__ == '__main__':  # main code block
         coreFile = fileInfo['coreFile']
         isNetCDF = fileInfo['isNetCDF']
         allBlockData, filelist = read_block_files(coreFile, isNetCDF)
-        write_and_plot_data(allBlockData, coreFile, '', iVar, iAlt)
+        write_and_plot_data(allBlockData, coreFile, '', iVar, iAlt,
+                            fileInfo['isEnsemble'], fileInfo['ensembleNumber'],
+                            fileInfo['ensembleMembers'])
     
         if (fileInfo['isEnsemble']):
             factor = 1.0 / float(fileInfo['ensembleMembers'])
