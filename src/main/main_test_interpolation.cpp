@@ -60,41 +60,40 @@ int main() {
   bool DidWork = true;
 
   Times time;
-  Report report;
 
   // Define the function and report:
   std::string function = "main";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   try {
   
     // Create inputs (reading the input file):
-    Inputs input(time, report);
-    if (!input.is_ok())
+    Inputs(time);
+    if (!is_ok())
       throw std::string("input initialization failed!");
     
-    Quadtree quadtree(input, report);
+    Quadtree quadtree;
     if (!quadtree.is_ok())
       throw std::string("quadtree initialization failed!");
     
     // Initialize MPI and parallel aspects of the code:
-    DidWork = init_parallel(input, quadtree, report);
+    DidWork = init_parallel(quadtree);
     if (!DidWork)
       throw std::string("init_parallel failed!");
     
     // Initialize the planet:
-    Planets planet(input, report);
+    Planets planet;
     MPI_Barrier(aether_comm);
     if (!planet.is_ok())
       throw std::string("planet initialization failed!");
 
     // Initialize Geographic grid:
-    Grid gGrid(input.get_nLonsGeo(),
-	           input.get_nLatsGeo(),
-	           input.get_nAltsGeo(),
+    Grid gGrid(get_nLonsGeo(),
+	           get_nLatsGeo(),
+	           get_nAltsGeo(),
 	           nGeoGhosts);
-    DidWork = gGrid.init_geo_grid(quadtree, planet, input, report);
+    DidWork = gGrid.init_geo_grid(quadtree, planet);
 
     // This part tests Grid::set_interpolation_coefs and get_interpolation_values
     {
@@ -232,8 +231,8 @@ int main() {
         }
     }
 
-    report.exit(function);
-    report.times();
+    exit(function);
+    times();
 
   } catch (std::string error) {
     if (iProc == 0) {

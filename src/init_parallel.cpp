@@ -23,9 +23,7 @@ std::string cGrid;
 
 MPI_Comm aether_comm;
 
-bool init_parallel(Inputs &input,
-                   Quadtree &quadtree,
-                   Report &report) {
+bool init_parallel(Quadtree &quadtree) {
 
   bool DidWork = true;
 
@@ -41,28 +39,28 @@ bool init_parallel(Inputs &input,
 
   // Modify the verbosity of the code by turning of verbose on all
   // processors except specified processor:
-  if (iProc != input.get_verbose_proc()) {
-    report.set_verbose(-1);
-    report.set_DefaultVerbose(-1);
+  if (iProc != get_verbose_proc()) {
+    set_verbose(-1);
+    set_DefaultVerbose(-1);
   }
 
-  nMembers = input.get_nMembers();
+  nMembers = get_nMembers();
   nGrids = nProcs / nMembers;
 
   int64_t nProcsPerNode = nGrids / quadtree.nRootNodes;
 
-  if (report.test_verbose(2))
+  if (test_verbose(2))
     std::cout << "Number of PEs per root node available: "
               << nProcsPerNode << "\n";
 
   quadtree.max_depth = round(log(nProcsPerNode) / log(4));
 
-  if (report.test_verbose(2))
+  if (test_verbose(2))
     std::cout << "Quadtree max depth : " << quadtree.max_depth << "\n";
 
   // Check to see if we have enough processors to do this stuff:
-  int nBlocksLonGeo = pow(2, quadtree.max_depth); // input.get_nBlocksLonGeo();
-  int nBlocksLatGeo = pow(2, quadtree.max_depth); // input.get_nBlocksLatGeo();
+  int nBlocksLonGeo = pow(2, quadtree.max_depth); // get_nBlocksLonGeo();
+  int nBlocksLatGeo = pow(2, quadtree.max_depth); // get_nBlocksLatGeo();
   nGrids = nBlocksLonGeo * nBlocksLatGeo * quadtree.nRootNodes;
   int nProcsNeeded = nMembers * nGrids;
 
@@ -72,7 +70,7 @@ bool init_parallel(Inputs &input,
     iMember = iProc / nGrids;
     iGrid = iProc % nGrids;
 
-    if (report.test_verbose(2))
+    if (test_verbose(2))
       std::cout << "iProc : " << iProc
                 << "; iMember : " << iMember
                 << "; iGrid : " << iGrid << "\n";
@@ -83,7 +81,7 @@ bool init_parallel(Inputs &input,
     cGrid = "g" + tostr(iGrid, 4);
 
     // Need to initialize the random number seeds:
-    int seed = input.get_original_seed();
+    int seed = get_original_seed();
 
     if (seed == 0) {
       // need to generate a real seed and pass it to all processors:
@@ -95,12 +93,12 @@ bool init_parallel(Inputs &input,
 
     // Make each seed unique for the ensemble member:
     seed = seed + iMember;
-    input.set_seed(seed);
+    set_seed(seed);
 
-    if (report.test_verbose(2))
+    if (test_verbose(2))
       std::cout << "seed : " << seed << "\n";
 
-    quadtree.build(input, report);
+    quadtree.build();
 
   } else {
     if (iProc == 0) {

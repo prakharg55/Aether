@@ -20,17 +20,15 @@
 // -----------------------------------------------------------------------------
 
 Chemistry::Chemistry(Neutrals neutrals,
-                     Ions ions,
-                     Inputs args,
-                     Report &report) {
+                     Ions ions) {
 
   std::string function = "Chemistry::Chemistry";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
-  read_chemistry_file(neutrals, ions, args, report);
+  read_chemistry_file(neutrals, ions);
 
-  report.exit(function);
+  exit(function);
   return;
 }
 
@@ -39,21 +37,19 @@ Chemistry::Chemistry(Neutrals neutrals,
 // -----------------------------------------------------------------------------
 
 int Chemistry::read_chemistry_file(Neutrals neutrals,
-                                   Ions ions,
-                                   Inputs args,
-                                   Report &report) {
+                                   Ions ions) {
 
   std::string function = "Chemistry::read_chemistry_file";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   std::ifstream infile_ptr;
   int iErr = 0;
   reaction_type reaction;
 
-  report.print(1, "Reading Chemistry File : " + args.get_chemistry_file());
+  print(1, "Reading Chemistry File : " + get_chemistry_file());
 
-  infile_ptr.open(args.get_chemistry_file());
+  infile_ptr.open(get_chemistry_file());
 
   if (!infile_ptr.is_open()) {
     std::cout << "Could not open chemistry file!\n";
@@ -88,11 +84,11 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
           // skip anything where the length of the string in column 2
           // is == 0:
           if (csv[iLine][iRate_].length() > 0) {
-            report.print(3, "interpreting chemistry line : " +
+            print(3, "interpreting chemistry line : " +
                          csv[iLine][headers["name"]]);
 
             reaction = interpret_reaction_line(neutrals, ions,
-                                               csv[iLine], headers, report);
+                                               csv[iLine], headers);
 
             // This section perturbs the reaction rates
             // (1) if the user specifies a value in the "uncertainty" column of the
@@ -102,7 +98,7 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
             if (headers.contains("uncertainty")) {
               if (csv[iLine][headers["uncertainty"]].length() > 0) {
                 // uncertainty column exists!
-                json values = args.get_perturb_values();
+                json values = get_perturb_values();
 
                 if (values.contains("Chemistry")) {
                   json chemistryList = values["Chemistry"];
@@ -115,7 +111,7 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
                         precision_t perturb_rate =
                           str_to_num(csv[iLine][headers["uncertainty"]]);
 
-                        int seed = args.get_updated_seed();
+                        int seed = get_updated_seed();
                         std::vector<double> perturbation;
                         precision_t mean = 1.0;
                         precision_t std = perturb_rate;
@@ -126,7 +122,7 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
                                                               nV,
                                                               seed);
 
-                        if (report.test_verbose(2))
+                        if (test_verbose(2))
                           std::cout << "Perturbing reaction "
                                     << reaction.name << " by multiplier : "
                                     << perturbation[0] << "\n";
@@ -164,7 +160,7 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
           }
 
           if (reaction.nLosses > 0 && reaction.nSources > 0) {
-            if (report.test_verbose(3))
+            if (test_verbose(3))
               display_reaction(reaction);
             reactions.push_back(reaction);
             nReactions++;
@@ -174,7 +170,7 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
     }
   }
 
-  report.exit(function);
+  exit(function);
   return iErr;
 }
 
@@ -185,12 +181,11 @@ int Chemistry::read_chemistry_file(Neutrals neutrals,
 Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
                                                             Ions ions,
                                                             std::vector<std::string> line,
-                                                            json headers,
-                                                            Report &report) {
+                                                            json headers) {
 
   std::string function = "Chemistry::interpret_reaction_line";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   reaction_type reaction;
 
@@ -202,7 +197,7 @@ Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
   reaction.nLosses = 0;
 
   for (i = headers["loss1"]; i < headers["loss3"]; i++) {
-    find_species_id(line[i], neutrals, ions, id_, IsNeutral, report);
+    find_species_id(line[i], neutrals, ions, id_, IsNeutral);
 
     if (id_ >= 0) {
       reaction.losses_names.push_back(line[i]);
@@ -216,7 +211,7 @@ Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
   reaction.nSources = 0;
 
   for (i = headers["source1"]; i < headers["source3"]; i++) {
-    find_species_id(line[i], neutrals, ions, id_, IsNeutral, report);
+    find_species_id(line[i], neutrals, ions, id_, IsNeutral);
 
     if (id_ >= 0) {
       reaction.sources_names.push_back(line[i]);
@@ -281,7 +276,7 @@ Chemistry::reaction_type Chemistry::interpret_reaction_line(Neutrals neutrals,
 
   }
 
-  report.exit(function);
+  exit(function);
   return reaction;
 }
 
@@ -293,25 +288,24 @@ void Chemistry::find_species_id(std::string name,
                                 Neutrals neutrals,
                                 Ions ions,
                                 int &id_,
-                                bool &IsNeutral,
-                                Report &report) {
+                                bool &IsNeutral) {
 
   std::string function = "Chemistry::find_species_id";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   int iSpecies;
   IsNeutral = false;
 
-  id_ = neutrals.get_species_id(name, report);
+  id_ = neutrals.get_species_id(name);
 
   if (id_ > -1)
     IsNeutral = true;
 
   else
-    id_ = ions.get_species_id(name, report);
+    id_ = ions.get_species_id(name);
 
-  report.exit(function);
+  exit(function);
   return;
 }
 

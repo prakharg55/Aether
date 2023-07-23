@@ -45,7 +45,7 @@ Ions::species_chars Ions::create_species(Grid grid) {
 //  Initialize Ions class
 // -----------------------------------------------------------------------------
 
-Ions::Ions(Grid grid, Planets planet, Inputs input, Report report) {
+Ions::Ions(Grid grid, Planets planet) {
 
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
@@ -53,7 +53,7 @@ Ions::Ions(Grid grid, Planets planet, Inputs input, Report report) {
 
   species_chars tmp;
 
-  report.print(2, "Initializing Ions");
+  print(2, "Initializing Ions");
 
   for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     tmp = create_species(grid);
@@ -106,11 +106,11 @@ Ions::Ions(Grid grid, Planets planet, Inputs input, Report report) {
   exb_vcgc = make_cube_vector(nLons, nLats, nAlts, 3);
 
   // This gets a bunch of the species-dependent characteristics:
-  int iErr = read_planet_file(planet, input, report);
+  int iErr = read_planet_file(planet);
 
-  if (input.get_do_restart()) {
-    report.print(1, "Restarting! Reading ion files!");
-    bool DidWork = restart_file(input.get_restartin_dir(), DoRead);
+  if (get_do_restart()) {
+    print(1, "Restarting! Reading ion files!");
+    bool DidWork = restart_file(get_restartin_dir(), DoRead);
 
     if (!DidWork)
       std::cout << "Reading Restart for Ions Failed!!!\n";
@@ -124,13 +124,13 @@ Ions::Ions(Grid grid, Planets planet, Inputs input, Report report) {
 // Read in the planet file that describes the species - only ions
 // -----------------------------------------------------------------------------
 
-int Ions::read_planet_file(Planets planet, Inputs input, Report report) {
+int Ions::read_planet_file(Planets planet) {
 
   int iErr = 0;
   std::string hash;
   std::ifstream infile_ptr;
 
-  report.print(3, "In read_planet_file for Ions");
+  print(3, "In read_planet_file for Ions");
 
   json ions = planet.get_ions();
 
@@ -157,13 +157,13 @@ int Ions::read_planet_file(Planets planet, Inputs input, Report report) {
 // Calculate the electron density from the sum of all ion species
 // -----------------------------------------------------------------------------
 
-void Ions::fill_electrons(Report &report) {
+void Ions::fill_electrons() {
 
   int iSpecies;
 
   std::string function = "Ions::fill_electrons";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   species[nSpecies].density_scgc.zeros();
 
@@ -173,7 +173,7 @@ void Ions::fill_electrons(Report &report) {
 
   density_scgc = species[nSpecies].density_scgc;
 
-  report.exit(function);
+  exit(function);
   return;
 }
 
@@ -183,11 +183,11 @@ void Ions::fill_electrons(Report &report) {
 // Will return nSpecies for electrons
 //----------------------------------------------------------------------
 
-int Ions::get_species_id(std::string name, Report &report) {
+int Ions::get_species_id(std::string name) {
 
   std::string function = "Ions::get_species_id";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   int iSpecies;
   int id_ = -1;
@@ -200,7 +200,7 @@ int Ions::get_species_id(std::string name, Report &report) {
       }
   }
 
-  report.exit(function);
+  exit(function);
   return id_;
 }
 

@@ -19,36 +19,34 @@ int calc_euv(Planets planet,
              Euv &euv,
              Neutrals &neutrals,
              Ions &ions,
-             Indices indices,
-             Inputs input,
-             Report &report) {
+             Indices indices) {
 
   int iErr = 0;
 
-  if (time.check_time_gate(input.get_dt_euv())) {
+  if (time.check_time_gate(get_dt_euv())) {
     std::string function = "Euv::calc_euv";
     static int iFunction = -1;
-    report.enter(function, iFunction);
+    enter(function, iFunction);
 
-    if (input.get_is_student())
-      report.print(-1, "(2) What function is this " +
-		    input.get_student_name() + "?");
+    if (get_is_student())
+      print(-1, "(2) What function is this " +
+		    get_student_name() + "?");
 
     // Chapman integrals for EUV energy deposition:
-    neutrals.calc_chapman(grid, report);
+    neutrals.calc_chapman(grid);
 
-    if (input.get_euv_model() == "euvac")
-      iErr = euv.euvac(time, indices, report);
-    else if (input.get_euv_model() == "neuvac")
-      iErr = euv.neuvac(time, indices, report);
-    else if (input.get_euv_model() == "hfg")
-      iErr = euv.solomon_hfg(time, indices, report);
+    if (get_euv_model() == "euvac")
+      iErr = euv.euvac(time, indices);
+    else if (get_euv_model() == "neuvac")
+      iErr = euv.neuvac(time, indices);
+    else if (get_euv_model() == "hfg")
+      iErr = euv.solomon_hfg(time, indices);
     
-    iErr = euv.scale_from_1au(planet, time, report);
+    iErr = euv.scale_from_1au(planet, time);
 
-    calc_ionization_heating(euv, neutrals, ions, report);
+    calc_ionization_heating(euv, neutrals, ions);
 
-    report.exit(function);
+    exit(function);
   }
 
   return iErr;
@@ -60,15 +58,14 @@ int calc_euv(Planets planet,
 
 void calc_ionization_heating(Euv euv,
                              Neutrals &neutrals,
-                             Ions &ions,
-                             Report &report) {
+                             Ions &ions) {
 
   int64_t iAlt, iWave, iSpecies;
   int i_, iIon, iIonization;
 
   std::string function = "calc_ionization_heating";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   // Zero out all source terms:
 
@@ -157,6 +154,6 @@ void calc_ionization_heating(Euv euv,
     neutrals.rho_scgc /
     neutrals.Cv_scgc;
 
-  report.exit(function);
+  exit(function);
   return;
 }

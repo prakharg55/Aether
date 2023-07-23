@@ -12,7 +12,7 @@
 // Initialize the ion temperature - set equal to the neutral temperature
 // --------------------------------------------------------------------------
 
-void Ions::init_ion_temperature(Neutrals neutrals, Grid grid, Report &report) {
+void Ions::init_ion_temperature(Neutrals neutrals, Grid grid) {
 
   int64_t iIon;
 
@@ -37,11 +37,11 @@ void Ions::init_ion_temperature(Neutrals neutrals, Grid grid, Report &report) {
 // --------------------------------------------------------------------------
 
 void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
-                                Times time, Inputs input, Report &report) {
+                                Times time) {
 
   std::string function = "Ions::calc_ion_temperature";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   int64_t iIon, iLon, iLat, nSpecs;
   int64_t nLons = grid.get_nLons();
@@ -68,14 +68,14 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
   return;
   
   // Loop over all species or assume only bulk calculation
-  if (input.get_do_calc_bulk_ion_temp())
+  if (get_do_calc_bulk_ion_temp())
     // First ion species only, currently is O+
     nSpecs = 1;
   else
     nSpecs = nSpecies;
 
-  if (report.test_verbose(4)) {
-    std::cout << "Bulk ion temp flag: " << input.get_do_calc_bulk_ion_temp()
+  if (test_verbose(4)) {
+    std::cout << "Bulk ion temp flag: " << get_do_calc_bulk_ion_temp()
               << " so 'number of ions' is " << nSpecs << "\n";
   }
 
@@ -111,13 +111,13 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
     // As more temperature terms get coded, they are added to the parenthesis
     // for inclusion in the advancement of the ion temperature
     // -------------------------------------------------------------------------
-    if (!input.get_do_calc_bulk_ion_temp()) {
+    if (!get_do_calc_bulk_ion_temp()) {
       species[iIon].temperature_scgc = species[iIon].temperature_scgc +
                                        dt * (conduction_scgc);
     }
   } // Ions
 
-  if (!input.get_do_calc_bulk_ion_temp()) {
+  if (!get_do_calc_bulk_ion_temp()) {
     // Use the density averaged temperature to fill the bulk temperature
     tempT.zeros();
     tempD.zeros();
@@ -132,7 +132,7 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
     temperature_scgc = tempT / tempD;
   }
 
-  if (input.get_do_calc_bulk_ion_temp()) {
+  if (get_do_calc_bulk_ion_temp()) {
     // Add temperature terms together to advance bulk ion temperature
     temperature_scgc = temperature_scgc + dt * (conduction_scgc);
 
@@ -141,6 +141,6 @@ void Ions::calc_ion_temperature(Neutrals neutrals, Grid grid,
       species[iIon].temperature_scgc = temperature_scgc;
   }
 
-  report.exit(function);
+  exit(function);
   return;
 }

@@ -219,9 +219,7 @@ void Satellite::print() {
 // Initialize the Logfile
 //-------------------------------------------------------------
 
-Logfile::Logfile(Indices &indices,
-                 Inputs &input,
-                 Report &report) {
+Logfile::Logfile(Indices &indices) {
 
     // Read the settings for general log file and satellites
     // Write the header to the general logfile
@@ -229,16 +227,16 @@ Logfile::Logfile(Indices &indices,
 
     std::string function = "Logfile::Logfile";
     static int iFunction = -1;
-    report.enter(function, iFunction);
+    enter(function, iFunction);
 
     // Read the inputs
-    logfileName = input.get_logfile();
-    species = input.get_species_vector();
-    dt = input.get_logfile_dt();
-    doAppend = input.get_logfile_append();
-    std::vector<std::string> sat_files = input.get_satellite_files();
-    std::vector<std::string> sat_names = input.get_satellite_names();
-    std::vector<precision_t> sat_dts = input.get_satellite_dts();
+    logfileName = get_logfile();
+    species = get_species_vector();
+    dt = get_logfile_dt();
+    doAppend = get_logfile_append();
+    std::vector<std::string> sat_files = get_satellite_files();
+    std::vector<std::string> sat_names = get_satellite_names();
+    std::vector<precision_t> sat_dts = get_satellite_dts();
 
     // Open the general log file stream
     if (doAppend) {
@@ -304,7 +302,7 @@ Logfile::Logfile(Indices &indices,
     // prevent any process writing data into logfile before initialization
     MPI_Barrier(aether_comm);
 
-    report.exit(function);
+    exit(function);
 }
 
 //-------------------------------------------------------------
@@ -325,12 +323,11 @@ bool Logfile::write_logfile(Indices &indices,
                             Neutrals &neutrals,
                             Ions &ions,
                             Grid &gGrid,
-                            Times &time,
-                            Report &report) {
+                            Times &time) {
 
     std::string function = "Logfile::write_logfile";
     static int iFunction = -1;
-    report.enter(function, iFunction);
+    enter(function, iFunction);
 
     // Store the locations and indexes of satellites whose time gate is open
     std::vector<precision_t> lons;
@@ -376,7 +373,7 @@ bool Logfile::write_logfile(Indices &indices,
 
         // Specified variables
         for (auto &it : species) {
-            const arma_cube &density = find_species_density(it, neutrals, ions, report);
+            const arma_cube &density = find_species_density(it, neutrals, ions);
             interp_result = gGrid.get_interpolation_values(density);
             for (size_t i = 0; i < interp_result.size(); ++i) {
                 values_sat[i].push_back(interp_result[i]);
@@ -419,7 +416,7 @@ bool Logfile::write_logfile(Indices &indices,
                                                        lla[2]));
         // Specified variables
         for (auto it : species) {
-            min_mean_max = get_min_mean_max_density(it, neutrals, ions, report);
+            min_mean_max = get_min_mean_max_density(it, neutrals, ions);
             values_log.insert(values_log.end(),
                               min_mean_max.begin(),
                               min_mean_max.end());
@@ -437,6 +434,6 @@ bool Logfile::write_logfile(Indices &indices,
         }
     }
 
-    report.exit(function);
+    exit(function);
     return true;
 }

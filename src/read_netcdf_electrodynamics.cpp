@@ -112,16 +112,15 @@ std::string read_in_string(FILE *infile) {
 // a write function.
 // -----------------------------------------------------------------------------
 
-void Electrodynamics::read_netcdf_electrodynamics_file(std::string filename,
-                                                       Report &report) {
+void Electrodynamics::read_netcdf_electrodynamics_file(std::string filename) {
 
   std::string function = "Electrodynamics::read_netcdf_electrodynamics_file";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   if (filename == "") {
-    report.print(1, "No Electrodynamics File Specified");
-    report.exit(function);
+    print(1, "No Electrodynamics File Specified");
+    exit(function);
     return;
   }
 
@@ -133,7 +132,7 @@ void Electrodynamics::read_netcdf_electrodynamics_file(std::string filename,
   std::vector<arma_mat> energy_flux_struct, average_energy_struct;
   std::vector<arma_mat> ion_energy_flux_struct, ion_average_energy_struct;
 
-  report.print(1, "Reading Electrodynamics file : " + filename);
+  print(1, "Reading Electrodynamics file : " + filename);
   FILE *infile;
 
   char* char_arr;
@@ -172,7 +171,7 @@ void Electrodynamics::read_netcdf_electrodynamics_file(std::string filename,
 
     for (int i = 0; i < nVars; i++) {
       Vars.push_back(read_in_string(infile));
-      report.print(2, "Reading Var : " + Vars[i]);
+      print(2, "Reading Var : " + Vars[i]);
     }
 
     std::vector<int> itime;
@@ -238,6 +237,6 @@ void Electrodynamics::read_netcdf_electrodynamics_file(std::string filename,
 
   input_electrodynamics.push_back(obj);
 
-  report.exit(function);
+  exit(function);
   return;
 }

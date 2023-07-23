@@ -15,21 +15,19 @@ bfield_info_type get_dipole(precision_t lon,
                             precision_t lat,
                             precision_t alt,
                             bool DoDebug,
-                            Planets planet,
-                            Inputs input,
-                            Report &report) {
+                            Planets planet) {
 
   std::string function = "dipole";
   static int iFunction = -1;
 
   if (DoDebug)
-    report.enter(function, iFunction);
+    enter(function, iFunction);
 
   bfield_info_type bfield_info;
 
   precision_t llr[3];
   precision_t xyz[3];
-  precision_t radius = planet.get_radius(lat, input);
+  precision_t radius = planet.get_radius(lat);
 
   llr[0] = lon;
   llr[1] = lat;
@@ -111,7 +109,7 @@ bfield_info_type get_dipole(precision_t lon,
   bfield_info.lat = mlat;
 
   if (DoDebug)
-    report.exit(function);
+    exit(function);
 
   return bfield_info;
 }

@@ -3,8 +3,8 @@
 
 int64_t iProcQuery = -1;
 
-Quadtree::Quadtree(Inputs input, Report report) {
-  if (input.get_is_cubesphere())
+Quadtree::Quadtree() {
+  if (get_is_cubesphere())
     nRootNodes = 6;
   else
     nRootNodes = 1;
@@ -22,13 +22,13 @@ bool Quadtree::is_ok() {
 // build quadtree
 // --------------------------------------------------------------------------
 
-void Quadtree::build(Inputs input, Report report) {
+void Quadtree::build() {
 
   arma_mat origins;
   arma_mat rights;
   arma_mat ups;
 
-  if (input.get_is_cubesphere()) {
+  if (get_is_cubesphere()) {
     origins = CubeSphere::ORIGINS;
     rights = CubeSphere::RIGHTS;
     ups = CubeSphere::UPS;
@@ -65,7 +65,7 @@ void Quadtree::build(Inputs input, Report report) {
   // restrict the domain.  This will only work for the spherical
   // grid so far:
 
-  Inputs::grid_input_struct grid_input = input.get_grid_inputs();
+  grid_input_struct grid_input = get_grid_inputs();
 
   if (grid_input.lon_min > 0.0 ||
       grid_input.lon_max < 2.0 * cPI ||
@@ -81,13 +81,13 @@ void Quadtree::build(Inputs input, Report report) {
   qtnode tmp;
 
   for (uint64_t iNode = 0; iNode < nRootNodes; iNode++) {
-    if (report.test_verbose(2))
+    if (test_verbose(2))
       std::cout << "Making quadtree node : " << iNode << "\n";
 
     uint64_t iP = iNode * pow(4, max_depth);
     uint64_t iDepth = 0;
 
-    if (report.test_verbose(2))
+    if (test_verbose(2))
       std::cout << "  iProcessor Start : " << iP << "\n";
 
     for (int i = 0; i < 3; i++) {

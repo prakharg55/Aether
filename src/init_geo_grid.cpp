@@ -10,13 +10,11 @@
 // Create connectivity between the nodes for message passing for cubesphere
 // ----------------------------------------------------------------------
 
-void Grid::create_cubesphere_connection(Quadtree quadtree,
-                                        Inputs input,
-                                        Report &report) {
+void Grid::create_cubesphere_connection(Quadtree quadtree) {
 
   std::string function = "Grid::create_cubesphere_connection";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   IsLatLonGrid = false;
 
@@ -55,7 +53,7 @@ void Grid::create_cubesphere_connection(Quadtree quadtree,
   edge_Yp = middle_norm + size_up_norm / 2.0;
   edge_Ym = middle_norm - size_up_norm / 2.0;
 
-  if (report.test_verbose(2))
+  if (test_verbose(2))
     std::cout << "connectivity : "
               << "  iProc : " << iProc << "\n"
               << "  isnorth : " << DoesTouchNorthPole << "\n"
@@ -72,7 +70,7 @@ void Grid::create_cubesphere_connection(Quadtree quadtree,
 
   int64_t iProcSelf = quadtree.find_point(middle_norm);
 
-  report.exit(function);
+  exit(function);
   return;
 }
 
@@ -145,13 +143,11 @@ void fill_cubesphere_lat_lon_from_norms(Quadtree quadtree,
 //    - if not restarting, initialize the grid
 // ----------------------------------------------------------------------
 
-void Grid::create_cubesphere_grid(Quadtree quadtree,
-                                  Inputs input,
-                                  Report &report) {
+void Grid::create_cubesphere_grid(Quadtree quadtree) {
 
   std::string function = "Grid::create_cubesphere_grid";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   arma_vec dr(3), du(3), ll(3);
   double xn, yn, zn, rn;
@@ -221,7 +217,7 @@ void Grid::create_cubesphere_grid(Quadtree quadtree,
     geoLat_Corner.slice(iAlt) = lat2d_corner;
   }
 
-  report.exit(function);
+  exit(function);
   return;
 }
 
@@ -229,13 +225,11 @@ void Grid::create_cubesphere_grid(Quadtree quadtree,
 // Create connectivity between the nodes for message passing for sphere
 // ----------------------------------------------------------------------
 
-void Grid::create_sphere_connection(Quadtree quadtree,
-                                    Inputs input,
-                                    Report &report) {
+void Grid::create_sphere_connection(Quadtree quadtree) {
 
   std::string function = "Grid::create_sphere_connection";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   IsLatLonGrid = true;
 
@@ -301,7 +295,7 @@ void Grid::create_sphere_connection(Quadtree quadtree,
       edge_Yp(0) -= 0.5;
   }
 
-  if (report.test_verbose(2))
+  if (test_verbose(2))
     std::cout << "connectivity : "
               << "  iProc : " << iProc << "\n"
               << "  isnorth : " << DoesTouchNorthPole << "\n"
@@ -311,7 +305,7 @@ void Grid::create_sphere_connection(Quadtree quadtree,
               << "  iProcXm : " << iProcXm << "\n"
               << "  iProcXp : " << iProcXp << "\n";
 
-  report.exit(function);
+  exit(function);
   return;
 }
 
@@ -319,13 +313,11 @@ void Grid::create_sphere_connection(Quadtree quadtree,
 // Create a spherical grid with lon/lat/alt coordinates
 // ----------------------------------------------------------------------
 
-void Grid::create_sphere_grid(Quadtree quadtree,
-                              Inputs input,
-                              Report &report) {
+void Grid::create_sphere_grid(Quadtree quadtree) {
 
   std::string function = "Grid::create_simple_lat_lon_alt_grid";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   int64_t iLon, iLat, iAlt;
 
@@ -418,7 +410,7 @@ void Grid::create_sphere_grid(Quadtree quadtree,
     geoLat_Corner.slice(iAlt) = lat2d_corner;
   }
 
-  report.exit(function);
+  exit(function);
   return;
 }
 
@@ -426,17 +418,17 @@ void Grid::create_sphere_grid(Quadtree quadtree,
 // Create a spherical grid with lon/lat/alt coordinates
 // ----------------------------------------------------------------------
 
-void Grid::create_altitudes(Planets planet, Inputs input, Report &report) {
+void Grid::create_altitudes(Planets planet) {
 
   std::string function = "Grid::create_altitudes";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   int64_t iLon, iLat, iAlt;
 
   arma_vec alt1d(nAlts);
 
-  Inputs::grid_input_struct grid_input = input.get_grid_inputs();
+  grid_input_struct grid_input = get_grid_inputs();
 
   if (grid_input.IsUniformAlt) {
     for (iAlt = 0; iAlt < nAlts; iAlt++)
@@ -461,10 +453,10 @@ void Grid::create_altitudes(Planets planet, Inputs input, Report &report) {
 
     int64_t iSp;
 
-    report.print(1, "Making non-uniform altitude grid!");
+    print(1, "Making non-uniform altitude grid!");
 
     if (grid_input.dalt > 0.5) {
-      if (report.test_verbose(0)) {
+      if (test_verbose(0)) {
         std::cout << "-----------------------------------------------------\n";
         std::cout << "WARNING: dAlt is set to > 0.5, with non-uniform grid!\n";
         std::cout << "   dAlt = " << grid_input.dalt << "\n";
@@ -473,7 +465,7 @@ void Grid::create_altitudes(Planets planet, Inputs input, Report &report) {
     }
 
     double alt = grid_input.alt_min;
-    radius = planet.get_radius(0.0,input) + alt;
+    radius = planet.get_radius(0.0) + alt;
     precision_t mu = planet.get_mu();
     gravity = mu / (radius * radius);
 
@@ -502,7 +494,7 @@ void Grid::create_altitudes(Planets planet, Inputs input, Report &report) {
     for (iAlt = 0; iAlt <= nGeoGhosts; iAlt++) {
       alt1d(iAlt) = grid_input.alt_min + (iAlt - nGeoGhosts) * dalt;
 
-      if (report.test_verbose(1))
+      if (test_verbose(1))
         std::cout << "iAlt : " << iAlt
                   << " Altitude : " << alt1d(iAlt) / 1000.0
                   << " (km)\n";
@@ -512,7 +504,7 @@ void Grid::create_altitudes(Planets planet, Inputs input, Report &report) {
 
       alt = alt1d(iAlt - 1);
       temperature = interpolate_1d(alt, input_alt, input_temp);
-      radius = planet.get_radius(0.0, input) + alt;
+      radius = planet.get_radius(0.0) + alt;
       gravity = mu / (radius * radius);
 
       mass = 0.0;
@@ -537,7 +529,7 @@ void Grid::create_altitudes(Planets planet, Inputs input, Report &report) {
       h = cKB * temperature / (masses * gravity);
       densities = densities % exp(-dalt / h);
 
-      if (report.test_verbose(1))
+      if (test_verbose(1))
         std::cout << "iAlt : " << iAlt
                   << " Altitude : " << alt1d(iAlt) / 1000.0
                   << " (km)\n";
@@ -559,7 +551,7 @@ void Grid::create_altitudes(Planets planet, Inputs input, Report &report) {
       geoAlt_Corner.tube(iLon, iLat) = alt1d_below;
   }
 
-  report.exit(function);
+  exit(function);
   return;
 }
 
@@ -570,56 +562,54 @@ void Grid::create_altitudes(Planets planet, Inputs input, Report &report) {
 // ----------------------------------------------------------------------
 
 bool Grid::init_geo_grid(Quadtree quadtree,
-                         Planets planet,
-                         Inputs input,
-                         Report &report) {
+                         Planets planet) {
 
   std::string function = "Grid::init_geo_grid";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
   bool DidWork = true;
 
   IsGeoGrid = 1;
 
-  IsCubeSphereGrid = input.get_is_cubesphere();
+  IsCubeSphereGrid = get_is_cubesphere();
 
-  if (input.get_is_cubesphere())
-    create_cubesphere_connection(quadtree, input, report);
+  if (get_is_cubesphere())
+    create_cubesphere_connection(quadtree);
   else
-    create_sphere_connection(quadtree, input, report);
+    create_sphere_connection(quadtree);
 
-  if (input.get_do_restart()) {
-    report.print(1, "Restarting! Reading grid files!");
-    DidWork = read_restart(input.get_restartin_dir());
+  if (get_do_restart()) {
+    print(1, "Restarting! Reading grid files!");
+    DidWork = read_restart(get_restartin_dir());
   } else {
-    if (input.get_is_cubesphere())
-      create_cubesphere_grid(quadtree, input, report);
+    if (get_is_cubesphere())
+      create_cubesphere_grid(quadtree);
     else
-      create_sphere_grid(quadtree, input, report);
+      create_sphere_grid(quadtree);
 
     MPI_Barrier(aether_comm);
-    create_altitudes(planet, input, report);
+    create_altitudes(planet);
 
-    DidWork = write_restart(input.get_restartout_dir());
+    DidWork = write_restart(get_restartout_dir());
   }
 
   // Calculate the radius (for spherical or non-spherical)
-  fill_grid_radius(planet, input, report);
+  fill_grid_radius(planet);
   // Calculate grid spacing
-  calc_grid_spacing(planet, report);
+  calc_grid_spacing(planet);
   //calculate radial unit vector (for spherical or oblate planet)
-  calc_rad_unit(planet, input, report);
+  calc_rad_unit(planet);
   // Calculate gravity (including J2 term, if desired)
-  calc_gravity(planet, input, report);
+  calc_gravity(planet);
 
   // Calculate magnetic field and magnetic coordinates:
-  fill_grid_bfield(planet, input, report);
+  fill_grid_bfield(planet);
 
   // Throw a little message for students:
-  report.student_checker_function_name(input.get_is_student(),
-				       input.get_student_name(),
+  student_checker_function_name(get_is_student(),
+				       get_student_name(),
 				       4, "");
 
-  report.exit(function);
+  exit(function);
   return DidWork;
 }

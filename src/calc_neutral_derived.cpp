@@ -14,13 +14,13 @@
 //    - pressure
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_mass_density(Report &report) {
+void Neutrals::calc_mass_density() {
 
   int64_t iSpecies;
 
   std::string function = "Neutrals::calc_mass_density";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   rho_scgc.zeros();
   density_scgc.zeros();
@@ -34,7 +34,7 @@ void Neutrals::calc_mass_density(Report &report) {
   mean_major_mass_scgc = rho_scgc / density_scgc;
   pressure_scgc = cKB * density_scgc % temperature_scgc;
 
-  report.exit(function);
+  exit(function);
   return;
 }
 
@@ -46,13 +46,13 @@ void Neutrals::calc_mass_density(Report &report) {
 //   - Speed of sound
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_specific_heat(Report &report) {
+void Neutrals::calc_specific_heat() {
 
   int64_t iSpecies;
 
   std::string function = "Neutrals::calc_specific_heat";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   Cv_scgc.zeros();
   gamma_scgc.zeros();
@@ -80,7 +80,7 @@ void Neutrals::calc_specific_heat(Report &report) {
                     temperature_scgc /
                     mean_major_mass_scgc);
 
-  report.exit(function);
+  exit(function);
   return;
 }
 
@@ -91,7 +91,7 @@ void Neutrals::calc_specific_heat(Report &report) {
 // this is taken from Smith and Smith, JGR 1972, vol. 77, page 3592
 // ----------------------------------------------------------------------
 
-void Neutrals::calc_chapman(Grid grid, Report &report) {
+void Neutrals::calc_chapman(Grid grid) {
 
   int64_t iAlt, iLon, iLat;
 
@@ -118,7 +118,7 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 
   std::string function = "Neutrals::calc_chapman";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
@@ -247,7 +247,7 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
     }  // iLon
   }  // iSpecies
 
-  report.exit(function);
+  exit(function);
   return;
 }
 
@@ -255,7 +255,7 @@ void Neutrals::calc_chapman(Grid grid, Report &report) {
 // Calculate thermal conduction
 // -----------------------------------------------------------------------------
 
-void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
+void Neutrals::calc_conduction(Grid grid, Times time) {
 
   precision_t dt;
 
@@ -263,7 +263,7 @@ void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
 
   std::string function = "Neutrals::calc_conduction";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
@@ -304,5 +304,5 @@ void Neutrals::calc_conduction(Grid grid, Times time, Report &report) {
     }  // lat
   }  // lon
 
-  report.exit(function);
+  exit(function);
 }

@@ -10,11 +10,11 @@
 // Adds all of the sources to the states. Needs time to get dt.
 // -----------------------------------------------------------------------------
 
-void Neutrals::add_sources(Times time, Report &report) {
+void Neutrals::add_sources(Times time) {
 
   std::string function = "add_sources";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   precision_t dt = time.get_dt();
 
@@ -25,6 +25,6 @@ void Neutrals::add_sources(Times time, Report &report) {
           - O_cool_scgc
           - NO_cool_scgc);
 
-  report.exit(function);
+  exit(function);
   return;
 }

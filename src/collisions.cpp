@@ -9,12 +9,11 @@
 // read in from the CSV file.
 // -----------------------------------------------------------------------------
 
-void calc_ion_neutral_coll_freq(Neutrals &neutrals, Ions &ions,
-                                Report &report) {
+void calc_ion_neutral_coll_freq(Neutrals &neutrals, Ions &ions) {
 
   std::string function = "calc_ion_neutral_coll_freq";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
   arma_cube t, one_minus_log;
 
   for (int iIon = 0; iIon < ions.nSpecies; iIon++) {
@@ -43,6 +42,6 @@ void calc_ion_neutral_coll_freq(Neutrals &neutrals, Ions &ions,
     }
   }
 
-  report.exit(function);
+  exit(function);
   return;
 }

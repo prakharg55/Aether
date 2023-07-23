@@ -7,7 +7,7 @@
 // Calculate the electric field from the potential
 // --------------------------------------------------------------------------
 
-void Ions::calc_efield(Grid grid, Report &report) {
+void Ions::calc_efield(Grid grid) {
 
   // efield = - grad(potential)
   efield_vcgc = calc_gradient_vector(potential_scgc, grid);
@@ -27,7 +27,7 @@ void Ions::calc_efield(Grid grid, Report &report) {
 // Calculate the E x B drift from the electric field and magnetic field
 // --------------------------------------------------------------------------
 
-void Ions::calc_exb_drift(Grid grid, Report &report) {
+void Ions::calc_exb_drift(Grid grid) {
   arma_cube bmag2 =
     (grid.bfield_mag_scgc) % (grid.bfield_mag_scgc);
   exb_vcgc = cross_product(efield_vcgc, grid.bfield_vcgc);
@@ -41,8 +41,7 @@ void Ions::calc_exb_drift(Grid grid, Report &report) {
 // --------------------------------------------------------------------------
 
 std::vector<arma_cube> Ions::calc_ion_electron_pressure_gradient(int64_t iIon,
-    Grid grid,
-    Report &report) {
+    Grid grid) {
   std::vector<arma_cube> pressure_gradient_vcgc;
   arma_cube total_pressure_scgc;
 
@@ -68,23 +67,22 @@ std::vector<arma_cube> Ions::calc_ion_electron_pressure_gradient(int64_t iIon,
 
 void Ions::calc_ion_drift(Neutrals neutrals,
                           Grid grid,
-                          precision_t dt,
-                          Report &report) {
+                          precision_t dt) {
 
   std::string function = "Ions::calc_ion_drift";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   int64_t nX = grid.get_nX();
   int64_t nY = grid.get_nY();
   int64_t nZ = grid.get_nZ();
 
-  report.print(5, "going into calc_efield");
-  calc_efield(grid, report);
+  print(5, "going into calc_efield");
+  calc_efield(grid);
 
   // This is for the electron drift motion:
-  report.print(5, "going into calc_exb_drift");
-  calc_exb_drift(grid, report);
+  print(5, "going into calc_exb_drift");
+  calc_exb_drift(grid);
 
   std::vector<arma_cube> gravity_vcgc = make_cube_vector(nX, nY, nZ, 3);
   std::vector<arma_cube> wind_forcing = make_cube_vector(nX, nY, nZ, 3);
@@ -101,7 +99,7 @@ void Ions::calc_ion_drift(Neutrals neutrals,
   sum_rho.set_size(nX, nY, nZ);
   sum_rho.zeros();
 
-  fill_electrons(report);
+  fill_electrons();
 
   for (int64_t iComp = 0; iComp < 3; iComp++)
     velocity_vcgc[iComp].zeros();
@@ -120,8 +118,8 @@ void Ions::calc_ion_drift(Neutrals neutrals,
       Nie = cE * species[iIon].density_scgc;
 
       // Get gradient in pressure:
-      report.print(5, "going into pressure gradient");
-      grad_Pi_plus_Pe = calc_ion_electron_pressure_gradient(iIon, grid, report);
+      print(5, "going into pressure gradient");
+      grad_Pi_plus_Pe = calc_ion_electron_pressure_gradient(iIon, grid);
 
       // This is assuming that the 3rd dim is radial.
       // Want actual gravity for 3rd dim
@@ -129,7 +127,7 @@ void Ions::calc_ion_drift(Neutrals neutrals,
 	gravity_vcgc[iDim] = grid.gravity_vcgc[iDim] % rho;
 
       // Neutral Wind Forcing:
-      report.print(5, "neutral winds");
+      print(5, "neutral winds");
 
       for (int64_t iComp = 0; iComp < 3; iComp++)
         wind_forcing[iComp].zeros();
@@ -202,7 +200,7 @@ void Ions::calc_ion_drift(Neutrals neutrals,
   for (int64_t iComp = 0; iComp < 3; iComp++)
     velocity_vcgc[iComp] = velocity_vcgc[iComp] / sum_rho;
 
-  report.exit(function);
+  exit(function);
   return;
 }
 

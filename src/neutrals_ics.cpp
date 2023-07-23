@@ -18,40 +18,38 @@
 
 int Neutrals::initial_conditions(Grid grid,
                                  Times time,
-                                 Indices indices,
-                                 Inputs input,
-                                 Report &report) {
+                                 Indices indices) {
 
   std::string function = "Neutrals::initial_conditions";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   int iErr = 0;
   int64_t iLon, iLat, iAlt, iA;
   precision_t alt, r;
 
-  report.print(3, "Creating Neutrals initial_condition");
+  print(3, "Creating Neutrals initial_condition");
 
-  if (input.get_do_restart()) {
-    report.print(1, "Restarting! Reading neutral files!");
-    bool DidWork = restart_file(input.get_restartin_dir(), DoRead);
+  if (get_do_restart()) {
+    print(1, "Restarting! Reading neutral files!");
+    bool DidWork = restart_file(get_restartin_dir(), DoRead);
 
     if (!DidWork)
       std::cout << "Reading Restart for Neutrals Failed!!!\n";
   } else {
 
-    json ics = input.get_initial_condition_types();
+    json ics = get_initial_condition_types();
 
     if (ics["type"] == "Msis") {
 
-      report.print(2, "Using MSIS for Initial Conditions");
+      print(2, "Using MSIS for Initial Conditions");
 
-      Msis msis(input);
+      Msis msis;
 
       if (!msis.is_ok()) {
         iErr = 1;
 
-        if (report.test_verbose(0)) {
+        if (test_verbose(0)) {
           std::cout << "MSIS Initial Conditions asked for, ";
           std::cout << "but MSIS is not compiled! Yikes!\n";
         }
@@ -75,22 +73,22 @@ int Neutrals::initial_conditions(Grid grid,
         temperature_scgc.fill(initial_temperatures[0]);
 
       for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-        if (report.test_verbose(3))
+        if (test_verbose(3))
           std::cout << "Setting Species : " << species[iSpecies].cName << "\n";
 
         if (msis.is_valid_species(species[iSpecies].cName)) {
-          if (report.test_verbose(3))
+          if (test_verbose(3))
             std::cout << "  Found in MSIS!\n";
 
           species[iSpecies].density_scgc =
             msis.get_cube(species[iSpecies].cName);
         } else {
-          if (report.test_verbose(3))
+          if (test_verbose(3))
             std::cout << "  NOT Found in MSIS - setting constant\n";
 
           species[iSpecies].density_scgc.slice(0).
           fill(species[iSpecies].lower_bc_density);
-          fill_with_hydrostatic(iSpecies, grid, report);
+          fill_with_hydrostatic(iSpecies, grid);
         }
 
       }
@@ -161,13 +159,13 @@ int Neutrals::initial_conditions(Grid grid,
         fill(species[iSpecies].lower_bc_density);
       }
 
-      fill_with_hydrostatic(grid, report);
+      fill_with_hydrostatic(grid);
 
     } // type = planet
 
   }
 
-  report.exit(function);
+  exit(function);
   return iErr;
 }
 

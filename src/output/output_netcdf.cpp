@@ -59,13 +59,11 @@ int output(Neutrals neutrals,
            Ions ions,
            Grid grid,
            Times time,
-           Planets planet,
-           Inputs args,
-           Report &report) {
+           Planets planet) {
 
   int iErr = 0;
 
-  int nOutputs = args.get_n_outputs();
+  int nOutputs = get_n_outputs();
 
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
@@ -77,15 +75,15 @@ int output(Neutrals neutrals,
 
   std::string function = "output";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   for (int iOutput = 0; iOutput < nOutputs; iOutput++) {
 
-    if (time.check_time_gate(args.get_dt_output(iOutput))) {
+    if (time.check_time_gate(get_dt_output(iOutput))) {
 
-      grid.calc_sza(planet, time, report);
-      grid.calc_gse(planet, time, report);
-      grid.calc_mlt(report);
+      grid.calc_sza(planet, time);
+      grid.calc_gse(planet, time);
+      grid.calc_mlt();
 
       std::string time_string;
       std::string file_name;
@@ -94,7 +92,7 @@ int output(Neutrals neutrals,
       std::string LONG_NAME = "long_name";
       std::string file_pre;
 
-      std::string type_output = args.get_type_output(iOutput);
+      std::string type_output = get_type_output(iOutput);
 
       if (type_output == "neutrals")
         file_pre = "3DNEU";
@@ -109,7 +107,7 @@ int output(Neutrals neutrals,
       file_name = file_pre + "_" + time_string + file_ext;
 
       // Create the file:
-      report.print(0, "Writing file : " + file_name);
+      print(0, "Writing file : " + file_name);
       NcFile ncdf_file(file_name, NcFile::replace);
 
       // Add dimensions:
@@ -173,7 +171,7 @@ int output(Neutrals neutrals,
         std::vector<NcVar> denVar;
 
         for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-          if (report.test_verbose(3))
+          if (test_verbose(3))
             std::cout << "Outputting Var : "
                       << neutrals.species[iSpecies].cName << "\n";
 
@@ -210,7 +208,7 @@ int output(Neutrals neutrals,
         std::vector<NcVar> ionVar;
 
         for (int iSpecies = 0; iSpecies < nIons; iSpecies++) {
-          if (report.test_verbose(3))
+          if (test_verbose(3))
             std::cout << "Outputting Var : "
                       << ions.species[iSpecies].cName << "\n";
 
@@ -266,6 +264,6 @@ int output(Neutrals neutrals,
     }  // if time check
   }  // for iOutput
 
-  report.exit(function);
+  exit(function);
   return iErr;
 }

@@ -10,11 +10,11 @@
 //  Fill in Solar Zenith Angle and cos(solar zenith angle)
 // ---------------------------------------------------------------------------
 
-void Grid::calc_sza(Planets planet, Times time, Report &report) {
+void Grid::calc_sza(Planets planet, Times time) {
 
   std::string function = "Grid::calc_sza";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   precision_t lon_offset = planet.get_longitude_offset(time);
   precision_t sin_dec = planet.get_sin_dec(time);
@@ -29,18 +29,18 @@ void Grid::calc_sza(Planets planet, Times time, Report &report) {
     cos_dec * cos(geoLat_scgc) % cos(geoLocalTime_scgc - cPI);
   sza_scgc = acos(cos_sza_scgc);
 
-  report.exit(function);
+  exit(function);
 }
 
 // ---------------------------------------------------------------------------
 //  Fill in GSE Coordinates
 // ---------------------------------------------------------------------------
 
-void Grid::calc_gse(Planets planet, Times time, Report &report) {
+void Grid::calc_gse(Planets planet, Times time) {
 
   std::string function = "Grid::calc_sza";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   // Compute GSE coordinates:
   // 1. use latitude / local time to derive XYZ
@@ -85,7 +85,7 @@ void Grid::calc_gse(Planets planet, Times time, Report &report) {
   mag_pole_south_gse = transform_llr_to_xyz_3d(lon_lat_radius_col);
   mag_pole_south_gse = rotate_around_y_3d(mag_pole_south_gse, -declination);
 
-  report.exit(function);
+  exit(function);
 }
 
 // ---------------------------------------------------------------------------
@@ -94,11 +94,11 @@ void Grid::calc_gse(Planets planet, Times time, Report &report) {
 //      and filled in!
 // ---------------------------------------------------------------------------
 
-void Grid::calc_mlt(Report &report) {
+void Grid::calc_mlt() {
 
   std::string function = "Grid::calc_mlt";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   arma_mat dx(nX, nY), dy(nX, nY);
   arma_mat dlat_north(nX, nY);
@@ -137,18 +137,18 @@ void Grid::calc_mlt(Report &report) {
     magLocalTime_scgc.slice(iZ) = mlt - 24.0 * floor(mlt / 24.0);
   }
 
-  report.exit(function);
+  exit(function);
 }
 
 // -----------------------------------------------------------------------------
 //  fill grid with magnetic field values
 // -----------------------------------------------------------------------------
 
-void Grid::fill_grid_bfield(Planets planet, Inputs input, Report &report) {
+void Grid::fill_grid_bfield(Planets planet) {
 
   std::string function = "Grid::fill_grid_bfield";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   int64_t iLon, iLat, iAlt, iDim;
   precision_t lon, lat, alt;
@@ -169,7 +169,7 @@ void Grid::fill_grid_bfield(Planets planet, Inputs input, Report &report) {
           alt = geoAlt_scgc(iLon, iLat, iAlt);
 
           bfield_info = get_bfield(lon, lat, alt, DoDebug,
-                                   planet, input, report);
+                                   planet);
 
           magLat_scgc(iLon, iLat, iAlt) = bfield_info.lat;
           magLon_scgc(iLon, iLat, iAlt) = bfield_info.lon;
@@ -193,11 +193,11 @@ void Grid::fill_grid_bfield(Planets planet, Inputs input, Report &report) {
       bfield_unit_vcgc[iDim] = bfield_vcgc[iDim] / (bfield_mag_scgc + 1e-32);
 
     int IsNorth = 1, IsSouth = 0;
-    mag_pole_north_ll = get_magnetic_pole(IsNorth, planet, input, report);
-    mag_pole_south_ll = get_magnetic_pole(IsSouth, planet, input, report);
+    mag_pole_north_ll = get_magnetic_pole(IsNorth, planet);
+    mag_pole_south_ll = get_magnetic_pole(IsSouth, planet);
   }
 
-  report.exit(function);
+  exit(function);
   return;
 }
 
@@ -205,11 +205,11 @@ void Grid::fill_grid_bfield(Planets planet, Inputs input, Report &report) {
 //  Fill in radius, radius^2, and 1/radius^2
 // -----------------------------------------------------------------------------
 
-void Grid::fill_grid_radius(Planets planet, Inputs &input, Report &report) {
+void Grid::fill_grid_radius(Planets planet) {
 
   std::string function = "Grid::fill_grid_radius";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   int64_t iLon, iLat, iAlt;
 
@@ -220,13 +220,13 @@ void Grid::fill_grid_radius(Planets planet, Inputs &input, Report &report) {
     for (iLat = 0; iLat < nLats; iLat++)
       for (iAlt = 0; iAlt < nAlts; iAlt++)
 	radius_scgc(iLon, iLat, iAlt) =
-	  planet.get_radius(geoLat_scgc(iLon, iLat, iLat), input);
+	  planet.get_radius(geoLat_scgc(iLon, iLat, iLat));
 
   radius_scgc = radius_scgc + geoAlt_scgc;
   radius2_scgc = radius_scgc % radius_scgc;
   radius2i_scgc = 1.0 / radius2_scgc;
   
-  report.exit(function);
+  exit(function);
   return;
 }
 
@@ -237,11 +237,11 @@ void Grid::fill_grid_radius(Planets planet, Inputs &input, Report &report) {
 // will be a latitudinal component.
 // -----------------------------------------------------------------------------
 
-void Grid::calc_rad_unit(Planets planet, Inputs &input, Report &report) {
+void Grid::calc_rad_unit(Planets planet) {
 
   std::string function = "Grid::calc_rad_unit";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   // *this is the grid class....
   std::vector<arma_cube> gradient_vcgc = calc_gradient_vector(radius_scgc, *this);
@@ -259,7 +259,7 @@ void Grid::calc_rad_unit(Planets planet, Inputs &input, Report &report) {
   rad_unit_vcgc[1] = (gradient_vcgc[1] % mag_radius_gradienti); 
   rad_unit_vcgc[2] = (gradient_vcgc[2] % mag_radius_gradienti);
 
-  report.exit(function);
+  exit(function);
   return;
 }
 
@@ -267,17 +267,17 @@ void Grid::calc_rad_unit(Planets planet, Inputs &input, Report &report) {
 //  Calculates gravity, including J2 perturbation
 // -----------------------------------------------------------------------------
 
-void Grid::calc_gravity(Planets planet, Inputs &input, Report &report){
+void Grid::calc_gravity(Planets planet){
 
   std::string function = "Grid::calc_gravity";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   precision_t mu = planet.get_mu();
 
   gravity_potential_scgc =
     - (mu / radius_scgc)
-    + ((3 * (planet.get_J2(input) * planet.get_mu())) /
+    + ((3 * (planet.get_J2() * planet.get_mu())) /
        (2 * pow(radius_scgc, 3)) %
        ((sin(geoLat_scgc) % sin(geoLat_scgc)) - 1.0));
 
@@ -288,7 +288,7 @@ void Grid::calc_gravity(Planets planet, Inputs &input, Report &report){
   gravity_vcgc[1] = - gravity_vcgc[1];
   gravity_vcgc[2] = - gravity_vcgc[2];
 
-  report.exit(function);
+  exit(function);
   return;
 }
 
@@ -296,11 +296,11 @@ void Grid::calc_gravity(Planets planet, Inputs &input, Report &report){
 //  Fill in XYZ in geo and mag coordinates
 // -----------------------------------------------------------------------------
 
-void Grid::calc_grid_spacing(Planets planet, Report &report) {
+void Grid::calc_grid_spacing(Planets planet) {
 
   int64_t iLon, iLat, iAlt;
 
-  report.print(3, "starting calc_grid_spacing");
+  print(3, "starting calc_grid_spacing");
 
   calc_alt_grid_spacing();
   calc_lat_grid_spacing();
@@ -317,7 +317,7 @@ void Grid::calc_grid_spacing(Planets planet, Report &report) {
   geoY_scgc = xyz[0];
   geoZ_scgc = xyz[0];
 
-  report.print(3, "ending calc_grid_spacing");
+  print(3, "ending calc_grid_spacing");
 }
 
 // ---------------------------------------

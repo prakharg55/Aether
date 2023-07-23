@@ -8,12 +8,58 @@
 
 #include "aether.h"
 
+int iVerbose;
+int iVerboseProc;
+int iTimingDepth;
+
+json settings;
+
+std::string euv_file = "UA/inputs/euv.csv";
+std::string aurora_file = "UA/inputs/aurora_earth.csv";
+std::string chemistry_file = "UA/inputs/chemistry_earth.csv";
+std::string collision_file =
+  "UA/inputs/ion_neutral_collision_frequencies.csv";
+std::string input_file = "aether.in";
+std::string euv_model = "euvac";
+std::string planetary_file = "UA/inputs/orbits.csv";
+std::vector<std::string> omniweb_files;
+std::string planet = "earth";
+std::string f107_file = "";
+std::string planet_species_file = "";
+std::string electrodynamics_file = "";
+
+std::string bfield = "none";
+
+grid_input_struct geo_grid_input;
+
+precision_t euv_heating_eff_neutrals;
+precision_t euv_heating_eff_electrons;
+
+std::vector<float> dt_output;
+std::vector<std::string> type_output;
+std::string output_directory = "UA/output";
+std::string restart_out_directory = "UA/restartOut";
+std::string restart_in_directory = "UA/restartIn";
+
+bool DoRestart;
+
+precision_t dt_euv;
+precision_t dt_report;
+
+int nLonsGeo;
+int nLatsGeo;
+int nAltsGeo;
+
+int updated_seed;
+
+bool IsOk;
+
 // -----------------------------------------------------------------------
 // Initialize the Inputs class.  This also sets some initial values.
 // The setting of initial values should probably be moved.
 // -----------------------------------------------------------------------
 
-Inputs::Inputs(Times &time, Report &report) {
+void Inputs(Times &time) {
 
   // ------------------------------------------------
   // Set some defaults:
@@ -60,7 +106,7 @@ Inputs::Inputs(Times &time, Report &report) {
 
   // ------------------------------------------------
   // Now read the input file:
-  IsOk = read_inputs_json(time, report);
+  IsOk = read_inputs_json(time);
 
   if (!IsOk && iProc == 0)
     std::cout << "Error in reading input file!\n";
@@ -70,7 +116,7 @@ Inputs::Inputs(Times &time, Report &report) {
 // output the settings json to a file (for restart)
 // -----------------------------------------------------------------------
 
-bool Inputs::write_restart() {
+bool write_restart() {
   bool DidWork = true;
 
   if (iProc == 0) {
@@ -87,7 +133,7 @@ bool Inputs::write_restart() {
 // Return log file name
 // -----------------------------------------------------------------------
 
-std::string Inputs::get_logfile() {
+std::string get_logfile() {
   return settings["Logfile"]["name"];
 }
 
@@ -95,7 +141,7 @@ std::string Inputs::get_logfile() {
 // Return how oftern to write log file
 // -----------------------------------------------------------------------
 
-precision_t Inputs::get_logfile_dt() {
+precision_t get_logfile_dt() {
   return settings["Logfile"]["dt"];
 }
 
@@ -103,7 +149,7 @@ precision_t Inputs::get_logfile_dt() {
 // Return whether to append or rewrite
 // -----------------------------------------------------------------------
 
-bool Inputs::get_logfile_append() {
+bool get_logfile_append() {
   return settings["Logfile"]["append"];
 }
 
@@ -111,7 +157,7 @@ bool Inputs::get_logfile_append() {
 // Return the name of specified variables as a vector
 // -----------------------------------------------------------------------
 
-std::vector<std::string> Inputs::get_species_vector() {
+std::vector<std::string> get_species_vector() {
   std::vector<std::string> species;
   const json &json_species = settings["Logfile"]["species"];
 
@@ -126,7 +172,7 @@ std::vector<std::string> Inputs::get_species_vector() {
 // Return the name of satellite files as a vector
 // -----------------------------------------------------------------------
 
-std::vector<std::string> Inputs::get_satellite_files() {
+std::vector<std::string> get_satellite_files() {
     std::vector<std::string> files;
     const json &json_files = settings["Satellites"]["files"];
 
@@ -141,7 +187,7 @@ std::vector<std::string> Inputs::get_satellite_files() {
 // Return the output file names of satellites as a vector
 // -----------------------------------------------------------------------
 
-std::vector<std::string> Inputs::get_satellite_names() {
+std::vector<std::string> get_satellite_names() {
     std::vector<std::string> names;
     const json &json_names = settings["Satellites"]["names"];
 
@@ -156,7 +202,7 @@ std::vector<std::string> Inputs::get_satellite_names() {
 // Return how oftern to write log file for satellites as a vector
 // -----------------------------------------------------------------------
 
-std::vector<precision_t> Inputs::get_satellite_dts() {
+std::vector<precision_t> get_satellite_dts() {
     std::vector<precision_t> dts;
     const json &json_dts = settings["Satellites"]["dts"];
 
@@ -172,7 +218,7 @@ std::vector<precision_t> Inputs::get_satellite_dts() {
 // Return value of a key in the json formatted inputs
 // -----------------------------------------------------------------------
 
-std::string Inputs::get_settings_str(std::string key1) {
+std::string get_settings_str(std::string key1) {
   std::string value = "unknown";
 
   if (settings.contains(key1))
@@ -181,7 +227,7 @@ std::string Inputs::get_settings_str(std::string key1) {
   return value;
 }
 
-std::string Inputs::get_settings_str(std::string key1,
+std::string get_settings_str(std::string key1,
                                      std::string key2) {
   std::string value = "unknown";
 
@@ -192,7 +238,7 @@ std::string Inputs::get_settings_str(std::string key1,
   return value;
 }
 
-std::vector<int> Inputs::get_settings_intarr(std::string key1) {
+std::vector<int> get_settings_intarr(std::string key1) {
   std::vector<int> value;
 
   if (settings.contains(key1)) {
@@ -205,7 +251,7 @@ std::vector<int> Inputs::get_settings_intarr(std::string key1) {
   return value;
 }
 
-std::vector<int> Inputs::get_settings_timearr(std::string key1) {
+std::vector<int> get_settings_timearr(std::string key1) {
   int nPtsTime = 7;
   std::vector<int> outarr(nPtsTime, 0);
   std::vector<int> timearr = get_settings_intarr(key1);
@@ -225,7 +271,7 @@ std::vector<int> Inputs::get_settings_timearr(std::string key1) {
 // Return characteristics of the grid that are entered by the user
 // -----------------------------------------------------------------------
 
-Inputs::grid_input_struct Inputs::get_grid_inputs() {
+grid_input_struct get_grid_inputs() {
   // First Get Values:
   geo_grid_input.alt_file = settings["GeoGrid"]["AltFile"];
   geo_grid_input.IsUniformAlt = settings["GeoGrid"]["IsUniformAlt"];
@@ -255,7 +301,7 @@ Inputs::grid_input_struct Inputs::get_grid_inputs() {
 // Return whether user is student
 // -----------------------------------------------------------------------
 
-bool Inputs::get_is_student() {
+bool get_is_student() {
   return settings["Student"]["is"];
 }
 
@@ -263,7 +309,7 @@ bool Inputs::get_is_student() {
 // Return student name
 // -----------------------------------------------------------------------
 
-std::string Inputs::get_student_name() {
+std::string get_student_name() {
   return settings["Student"]["name"];
 }
 
@@ -271,7 +317,7 @@ std::string Inputs::get_student_name() {
 // Return whether grid is cubesphere or spherical
 // -----------------------------------------------------------------------
 
-bool Inputs::get_is_cubesphere() {
+bool get_is_cubesphere() {
   return settings["CubeSphere"]["is"];
 }
 
@@ -279,7 +325,7 @@ bool Inputs::get_is_cubesphere() {
 // Return whether to restart or not
 // -----------------------------------------------------------------------
 
-bool Inputs::get_do_restart() {
+bool get_do_restart() {
   return settings["Restart"]["do"];
 }
 
@@ -287,7 +333,7 @@ bool Inputs::get_do_restart() {
 // Return NO cooling
 // -----------------------------------------------------------------------
 
-bool Inputs::get_NO_cooling() {
+bool get_NO_cooling() {
   return settings["Sources"]["Neutrals"]["NO_cool"];
 }
 
@@ -295,7 +341,7 @@ bool Inputs::get_NO_cooling() {
 // Return O cooling
 // -----------------------------------------------------------------------
 
-bool Inputs::get_O_cooling() {
+bool get_O_cooling() {
   return settings["Sources"]["Neutrals"]["O_cool"];
 }
 
@@ -303,7 +349,7 @@ bool Inputs::get_O_cooling() {
 // Return centripetal acceleration
 // -----------------------------------------------------------------------
 
-bool Inputs::get_cent_acc() {
+bool get_cent_acc() {
   return settings["Sources"]["Grid"]["Cent_acc"];
 }
 
@@ -311,7 +357,7 @@ bool Inputs::get_cent_acc() {
 // Return restart OUT directory
 // -----------------------------------------------------------------------
 
-std::string Inputs::get_restartout_dir() {
+std::string get_restartout_dir() {
   return settings["Restart"]["OutDir"];
 }
 
@@ -319,7 +365,7 @@ std::string Inputs::get_restartout_dir() {
 // Return restart OUT directory
 // -----------------------------------------------------------------------
 
-std::string Inputs::get_restartin_dir() {
+std::string get_restartin_dir() {
   return settings["Restart"]["InDir"];
 }
 
@@ -327,7 +373,7 @@ std::string Inputs::get_restartin_dir() {
 // dt for writing restart files
 // -----------------------------------------------------------------------
 
-precision_t Inputs::get_dt_write_restarts() {
+precision_t get_dt_write_restarts() {
   return settings["Restart"]["dt"];
 }
 
@@ -335,7 +381,7 @@ precision_t Inputs::get_dt_write_restarts() {
 // Return magnetic field type (dipole and none defined now.)
 // -----------------------------------------------------------------------
 
-std::string Inputs::get_bfield_type() {
+std::string get_bfield_type() {
   return settings["BField"];
 }
 
@@ -343,7 +389,7 @@ std::string Inputs::get_bfield_type() {
 // Return the EUV model used (EUVAC only option now)
 // -----------------------------------------------------------------------
 
-std::string Inputs::get_euv_model() {
+std::string get_euv_model() {
   return settings["Euv"]["Model"];
 }
 
@@ -351,7 +397,7 @@ std::string Inputs::get_euv_model() {
 // Return the heating efficiency of the neutrals for EUV
 // -----------------------------------------------------------------------
 
-precision_t Inputs::get_euv_heating_eff_neutrals() {
+precision_t get_euv_heating_eff_neutrals() {
   return settings["Euv"]["HeatingEfficiency"];
 }
 
@@ -359,7 +405,7 @@ precision_t Inputs::get_euv_heating_eff_neutrals() {
 // Return whether to include the photoelectron ionization
 // -----------------------------------------------------------------------
 
-bool Inputs::get_include_photoelectrons() {
+bool get_include_photoelectrons() {
   return settings["Euv"]["IncludePhotoElectrons"];
 }
 
@@ -367,7 +413,7 @@ bool Inputs::get_include_photoelectrons() {
 // Return how often to calculate EUV energy deposition
 // -----------------------------------------------------------------------
 
-precision_t Inputs::get_dt_euv() {
+precision_t get_dt_euv() {
   return settings["Euv"]["dt"];
 }
 
@@ -375,7 +421,7 @@ precision_t Inputs::get_dt_euv() {
 // Return how often to report progress of simulation
 // -----------------------------------------------------------------------
 
-precision_t Inputs::get_dt_report() {
+precision_t get_dt_report() {
   return settings["Debug"]["dt"];
 }
 
@@ -383,7 +429,7 @@ precision_t Inputs::get_dt_report() {
 // Return number of output types
 // -----------------------------------------------------------------------
 
-precision_t Inputs::get_n_outputs() {
+precision_t get_n_outputs() {
   return settings["Outputs"]["type"].size();
 }
 
@@ -391,7 +437,7 @@ precision_t Inputs::get_n_outputs() {
 // Return original random number seed
 // -----------------------------------------------------------------------
 
-int Inputs::get_original_seed() {
+int get_original_seed() {
   return settings["Seed"];
 }
 
@@ -399,7 +445,7 @@ int Inputs::get_original_seed() {
 // Set random number seed
 // -----------------------------------------------------------------------
 
-void Inputs::set_seed(int seed) {
+void set_seed(int seed) {
   settings["Seed"] = seed;
   updated_seed = seed;
 }
@@ -408,7 +454,7 @@ void Inputs::set_seed(int seed) {
 // Return random number seed that has been updated
 // -----------------------------------------------------------------------
 
-int Inputs::get_updated_seed() {
+int get_updated_seed() {
   std::default_random_engine get_random(updated_seed);
   updated_seed = get_random();
   return updated_seed;
@@ -418,15 +464,15 @@ int Inputs::get_updated_seed() {
 // Return number of longitudes, latitudes, and altitudes in Geo grid
 // -----------------------------------------------------------------------
 
-int Inputs::get_nLonsGeo() {
+int get_nLonsGeo() {
   return settings["GeoBlockSize"]["nLons"];
 }
 
-int Inputs::get_nLatsGeo() {
+int get_nLatsGeo() {
   return settings["GeoBlockSize"]["nLats"];;
 }
 
-int Inputs::get_nAltsGeo() {
+int get_nAltsGeo() {
   return settings["GeoBlockSize"]["nAlts"];
 }
 
@@ -434,11 +480,11 @@ int Inputs::get_nAltsGeo() {
 // Return number of Blocks of longitudes and latitudes in Geo grid
 // -----------------------------------------------------------------------
 
-int Inputs::get_nBlocksLonGeo() {
+int get_nBlocksLonGeo() {
   return settings["GeoBlockSize"]["nBlocksLon"];
 }
 
-int Inputs::get_nBlocksLatGeo() {
+int get_nBlocksLatGeo() {
   return settings["GeoBlockSize"]["nBlocksLat"];;
 }
 
@@ -446,7 +492,7 @@ int Inputs::get_nBlocksLatGeo() {
 // Return number of ensemble members
 // -----------------------------------------------------------------------
 
-int Inputs::get_nMembers() {
+int get_nMembers() {
   return settings["Ensembles"]["nMembers"];
 }
 
@@ -454,11 +500,11 @@ int Inputs::get_nMembers() {
 // Return verbose variables
 // -----------------------------------------------------------------------
 
-int Inputs::get_verbose() {
+int get_verbose() {
   return settings["Debug"]["iVerbose"];
 }
 
-int Inputs::get_verbose_proc() {
+int get_verbose_proc() {
   return settings["Debug"]["iProc"];
 }
 
@@ -466,7 +512,7 @@ int Inputs::get_verbose_proc() {
 // Return how often to output a given output type
 // -----------------------------------------------------------------------
 
-precision_t Inputs::get_dt_output(int iOutput) {
+precision_t get_dt_output(int iOutput) {
   precision_t value = 0.0;
   int nOutputs = settings.at("Outputs").at("type").size();
 
@@ -480,7 +526,7 @@ precision_t Inputs::get_dt_output(int iOutput) {
 // Return the output type
 // -----------------------------------------------------------------------
 
-std::string Inputs::get_type_output(int iOutput) {
+std::string get_type_output(int iOutput) {
   std::string value = "";
   int nOutputs = settings.at("Outputs").at("type").size();
 
@@ -494,7 +540,7 @@ std::string Inputs::get_type_output(int iOutput) {
 // Return EUV file name
 // -----------------------------------------------------------------------
 
-std::string Inputs::get_euv_file() {
+std::string get_euv_file() {
   return settings["Euv"]["File"];
 }
 
@@ -502,7 +548,7 @@ std::string Inputs::get_euv_file() {
 // Return aurora file name
 // -----------------------------------------------------------------------
 
-std::string Inputs::get_aurora_file() {
+std::string get_aurora_file() {
   return settings["AuroraFile"];
 }
 
@@ -510,7 +556,7 @@ std::string Inputs::get_aurora_file() {
 // Return Chemistry file name
 // -----------------------------------------------------------------------
 
-std::string Inputs::get_chemistry_file() {
+std::string get_chemistry_file() {
   return settings["ChemistryFile"];
 }
 
@@ -518,7 +564,7 @@ std::string Inputs::get_chemistry_file() {
 // Return Collision file name
 // -----------------------------------------------------------------------
 
-std::string Inputs::get_collision_file() {
+std::string get_collision_file() {
   return settings["CollisionsFile"];
 }
 
@@ -526,7 +572,7 @@ std::string Inputs::get_collision_file() {
 // Return Indices Lookup Filename
 // -----------------------------------------------------------------------
 
-std::string Inputs::get_indices_lookup_file() {
+std::string get_indices_lookup_file() {
   return settings["IndicesLookupFile"];
 }
 
@@ -534,7 +580,7 @@ std::string Inputs::get_indices_lookup_file() {
 // Return total number of OMNIWeb files to read
 // -----------------------------------------------------------------------
 
-int Inputs::get_number_of_omniweb_files() {
+int get_number_of_omniweb_files() {
   return settings["OmniwebFiles"].size();
 }
 
@@ -542,7 +588,7 @@ int Inputs::get_number_of_omniweb_files() {
 // Return OMNIWeb file names as a vector
 // -----------------------------------------------------------------------
 
-std::vector<std::string> Inputs::get_omniweb_files() {
+std::vector<std::string> get_omniweb_files() {
   std::vector<std::string> omniweb_files;
   int nFiles = settings["OmniwebFiles"].size();
 
@@ -556,7 +602,7 @@ std::vector<std::string> Inputs::get_omniweb_files() {
 // Return F107 file to read
 // -----------------------------------------------------------------------
 
-std::string Inputs::get_f107_file() {
+std::string get_f107_file() {
   return settings["F107File"];
 }
 
@@ -564,7 +610,7 @@ std::string Inputs::get_f107_file() {
 // Return planet name
 // -----------------------------------------------------------------------
 
-std::string Inputs::get_planet() {
+std::string get_planet() {
   return settings["Planet"];
 }
 
@@ -572,7 +618,7 @@ std::string Inputs::get_planet() {
 // Return file that contains (all) planetary characteristics
 // -----------------------------------------------------------------------
 
-std::string Inputs::get_planetary_file() {
+std::string get_planetary_file() {
   return settings["PlanetCharacteristicsFile"];
 }
 
@@ -581,11 +627,11 @@ std::string Inputs::get_planetary_file() {
 // a given planet
 // -----------------------------------------------------------------------
 
-std::string Inputs::get_planet_species_file() {
+std::string get_planet_species_file() {
   return settings["PlanetSpeciesFile"];
 }
 
-std::string Inputs::get_electrodynamics_file() {
+std::string get_electrodynamics_file() {
   return settings["ElectrodynamicsFile"];
 }
 
@@ -594,7 +640,7 @@ std::string Inputs::get_electrodynamics_file() {
 // of individual ion specie temperature calculations
 // -----------------------------------------------------------------------
 
-bool Inputs::get_do_calc_bulk_ion_temp() {
+bool get_do_calc_bulk_ion_temp() {
   return settings["DoCalcBulkIonTemp"];
 }
 
@@ -602,7 +648,7 @@ bool Inputs::get_do_calc_bulk_ion_temp() {
 //
 // -----------------------------------------------------------------------
 
-json Inputs::get_perturb_values() {
+json get_perturb_values() {
   json values;
 
   if (settings.contains("Perturb"))
@@ -615,7 +661,7 @@ json Inputs::get_perturb_values() {
 // Flag to have a latitude dependent radius, and by extension gravity
 // -----------------------------------------------------------------------
 
-bool Inputs::get_do_lat_dependent_radius() {
+bool get_do_lat_dependent_radius() {
   return settings["Oblate"]["isOblate"];
 }
 
@@ -623,7 +669,7 @@ bool Inputs::get_do_lat_dependent_radius() {
 // Flag to include J2 term in the gravity calculation
 // -----------------------------------------------------------------------
 
-bool Inputs::get_do_J2() {
+bool get_do_J2() {
   return settings["Oblate"]["isJ2"];
 }
 
@@ -631,7 +677,7 @@ bool Inputs::get_do_J2() {
 //
 // -----------------------------------------------------------------------
 
-json Inputs::get_initial_condition_types() {
+json get_initial_condition_types() {
   json values;
 
   if (settings.contains("InitialConditions"))
@@ -644,7 +690,7 @@ json Inputs::get_initial_condition_types() {
 //
 // -----------------------------------------------------------------------
 
-json Inputs::get_boundary_condition_types() {
+json get_boundary_condition_types() {
   json values;
 
   if (settings.contains("BoundaryConditions"))
@@ -657,6 +703,6 @@ json Inputs::get_boundary_condition_types() {
 // check to see if class is ok
 // --------------------------------------------------------------------------
 
-bool Inputs::is_ok() {
+bool is_ok() {
   return IsOk;
 }

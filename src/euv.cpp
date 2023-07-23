@@ -13,21 +13,21 @@
 // Initialize EUV
 // -----------------------------------------------------------------------------
 
-Euv::Euv(Inputs args, Report report) {
+Euv::Euv() {
 
   precision_t ave;
 
   IsOk = true;
 
   // Read in the EUV file:
-  IsOk = read_file(args, report);
+  IsOk = read_file();
 
   if (IsOk) {
     // Slot the short and long wavelengths into their arrays:
-    IsOk = slot_euv("Long", "", wavelengths_long, report);
+    IsOk = slot_euv("Long", "", wavelengths_long);
 
     if (IsOk)
-      IsOk = slot_euv("Short", "", wavelengths_short, report);
+      IsOk = slot_euv("Short", "", wavelengths_short);
 
     // This means we found both long and short wavelengths:
     if (IsOk) {
@@ -42,32 +42,32 @@ Euv::Euv(Inputs args, Report report) {
     }
 
     // Slot the EUVAC model coefficients:
-    if (args.get_euv_model() == "euvac") {
-      IsOk = slot_euv("F74113", "", euvac_f74113, report);
-      IsOk = slot_euv("AFAC", "", euvac_afac, report);
+    if (get_euv_model() == "euvac") {
+      IsOk = slot_euv("F74113", "", euvac_f74113);
+      IsOk = slot_euv("AFAC", "", euvac_afac);
     }
 
     // Slot the EUVAC model coefficients:
-    if (args.get_euv_model() == "neuvac") {
-      IsOk = slot_euv("NEUV_S1", "", neuvac_s1, report);
+    if (get_euv_model() == "neuvac") {
+      IsOk = slot_euv("NEUV_S1", "", neuvac_s1);
       if (IsOk)
-	IsOk = slot_euv("NEUV_S2", "", neuvac_s2, report);
+	IsOk = slot_euv("NEUV_S2", "", neuvac_s2);
       if (IsOk)
-	IsOk = slot_euv("NEUV_S3", "", neuvac_s3, report);
+	IsOk = slot_euv("NEUV_S3", "", neuvac_s3);
       if (IsOk)
-	IsOk = slot_euv("NEUV_P1", "", neuvac_p1, report);
+	IsOk = slot_euv("NEUV_P1", "", neuvac_p1);
       if (IsOk)
-	IsOk = slot_euv("NEUV_P2", "", neuvac_p2, report);
+	IsOk = slot_euv("NEUV_P2", "", neuvac_p2);
       if (IsOk)
-	IsOk = slot_euv("NEUV_I1", "", neuvac_int, report);
+	IsOk = slot_euv("NEUV_I1", "", neuvac_int);
     }
 
-    if (args.get_euv_model() == "hfg") {
-      IsOk = slot_euv("HFGc1", "", solomon_hfg_c1, report);
+    if (get_euv_model() == "hfg") {
+      IsOk = slot_euv("HFGc1", "", solomon_hfg_c1);
       if (IsOk)
-	IsOk = slot_euv("HFGc2", "", solomon_hfg_c2, report);
+	IsOk = slot_euv("HFGc2", "", solomon_hfg_c2);
       if (IsOk)
-	IsOk = slot_euv("HFGfref", "", solomon_hfg_fref, report);
+	IsOk = slot_euv("HFGfref", "", solomon_hfg_fref);
     }
     
   }
@@ -80,7 +80,7 @@ Euv::Euv(Inputs args, Report report) {
 // cross sections
 // ---------------------------------------------------------------------------
 
-bool Euv::read_file(Inputs args, Report report) {
+bool Euv::read_file() {
 
   waveinfotype tmp;
   std::string line, col;
@@ -88,9 +88,9 @@ bool Euv::read_file(Inputs args, Report report) {
   std::ifstream infile_ptr;
   bool DidWork = true;
 
-  report.print(1, "Reading EUV File : " + args.get_euv_file());
+  print(1, "Reading EUV File : " + get_euv_file());
 
-  infile_ptr.open(args.get_euv_file());
+  infile_ptr.open(get_euv_file());
 
   if (!infile_ptr.is_open()) {
     if (iProc == 0)
@@ -104,7 +104,7 @@ bool Euv::read_file(Inputs args, Report report) {
       int IsFirstTime = 1;
 
       while (getline(infile_ptr, line)) {
-        report.print(5, line);
+        print(5, line);
 	line = strip_spaces(line);
         std::stringstream ss(line);
 
@@ -122,7 +122,7 @@ bool Euv::read_file(Inputs args, Report report) {
         }
 
         getline(ss, tmp.name, ',');
-        report.print(5, tmp.name);
+        print(5, tmp.name);
         getline(ss, tmp.to, ',');
         getline(ss, tmp.type, ',');
         getline(ss, col, ',');
@@ -161,14 +161,13 @@ bool Euv::read_file(Inputs args, Report report) {
 
 bool Euv::slot_euv(std::string item,
                    std::string item2,
-                   std::vector<float> &values,
-                   Report report) {
+                   std::vector<float> &values) {
 
   bool DidWork = true;
   int iLine;
   int IgnoreItem2 = 0;
 
-  report.print(3, "in slot_euv:" + item + ";" + item2);
+  print(3, "in slot_euv:" + item + ";" + item2);
 
   if (item2 == "")
     IgnoreItem2 = 1;
@@ -187,7 +186,7 @@ bool Euv::slot_euv(std::string item,
     DidWork = false;
 
   else {
-    if (report.test_verbose(2)) {
+    if (test_verbose(2)) {
       std::cout << "Found : " << waveinfo[iLine].name;
 
       if (!IgnoreItem2)
@@ -215,21 +214,19 @@ bool Euv::slot_euv(std::string item,
 // ---------------------------------------------------------------------
 
 bool Euv::pair_euv(Neutrals &neutrals,
-		   Ions ions,
-		   Inputs input,
-		   Report &report) {
+		   Ions ions) {
 
   std::string function = "Euv::pair_euv";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   bool DidWork = true;
 
-  bool includePhotoelectrons = input.get_include_photoelectrons();
+  bool includePhotoelectrons = get_include_photoelectrons();
   
   for (int iSpecies = 0; iSpecies < neutrals.nSpecies; iSpecies++) {
 
-    if (report.test_verbose(5))
+    if (test_verbose(5))
       std::cout << neutrals.species[iSpecies].cName << "\n";
 
     neutrals.species[iSpecies].iEuvAbsId_ = -1;
@@ -241,7 +238,7 @@ bool Euv::pair_euv(Neutrals &neutrals,
 
     for (int64_t iEuv = 0; iEuv < nEuvs; iEuv++) {
 
-      if (report.test_verbose(4))
+      if (test_verbose(4))
         std::cout << "  " << waveinfo[iEuv].name << "\n";
 
       // if this matches...
@@ -249,7 +246,7 @@ bool Euv::pair_euv(Neutrals &neutrals,
 
         // First see if we can find absorbtion:
         if (waveinfo[iEuv].type == "abs") {
-          if (report.test_verbose(4))
+          if (test_verbose(4))
             std::cout << "  Found absorbtion\n";
 
           neutrals.species[iSpecies].iEuvAbsId_ = iEuv;
@@ -261,7 +258,7 @@ bool Euv::pair_euv(Neutrals &neutrals,
           // Loop through the ions to see if names match:
           for (int iIon = 0; iIon < ions.nSpecies; iIon++) {
             if (ions.species[iIon].cName == waveinfo[iEuv].to) {
-              if (report.test_verbose(4))
+              if (test_verbose(4))
                 std::cout << "  Found ionization!! --> "
                           << ions.species[iIon].cName << "\n";
 
@@ -279,7 +276,7 @@ bool Euv::pair_euv(Neutrals &neutrals,
           // Loop through the ions to see if names match:
           for (int iIon = 0; iIon < ions.nSpecies; iIon++) {
             if (ions.species[iIon].cName == waveinfo[iEuv].to) {
-              if (report.test_verbose(5))
+              if (test_verbose(5))
                 std::cout << "  Found photo-electron augmentation!! --> "
                           << ions.species[iIon].cName << "\n";
 
@@ -295,7 +292,7 @@ bool Euv::pair_euv(Neutrals &neutrals,
     }  // for iEuv
   }  // for iSpecies
 
-  report.exit(function);
+  exit(function);
   return DidWork;
 }
 
@@ -305,13 +302,12 @@ bool Euv::pair_euv(Neutrals &neutrals,
 // --------------------------------------------------------------------------
 
 int Euv::scale_from_1au(Planets planet,
-                        Times time,
-                        Report report) {
+                        Times time) {
   int iErr = 0;
   precision_t d = planet.get_star_to_planet_dist(time);
   precision_t scale = 1.0 / (d * d);
 
-  if (report.test_verbose(7))
+  if (test_verbose(7))
     std::cout << "Scale from 1 AU : " << scale << "\n";
 
   for (int iWave = 0; iWave < nWavelengths; iWave++)
@@ -325,15 +321,14 @@ int Euv::scale_from_1au(Planets planet,
 // --------------------------------------------------------------------------
 
 int Euv::euvac(Times time,
-               Indices indices,
-               Report &report) {
+               Indices indices) {
 
   int iErr = 0;
   precision_t slope;
 
   std::string function = "Euv::euvac";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   precision_t f107 = indices.get_f107(time.get_current());
   precision_t f107a = indices.get_f107a(time.get_current());
@@ -348,7 +343,7 @@ int Euv::euvac(Times time,
     wavelengths_intensity_1au[iWave] = euvac_f74113[iWave] * slope * pcm2topm2;
   }
 
-  if (report.test_verbose(4)) {
+  if (test_verbose(4)) {
     std::cout << "EUVAC output : "
               << f107 << " " << f107a
               << " -> " << mean_f107 << "\n";
@@ -361,7 +356,7 @@ int Euv::euvac(Times time,
     }
   }
 
-  report.exit(function);
+  exit(function);
   return iErr;
 }
 
@@ -370,15 +365,14 @@ int Euv::euvac(Times time,
 // --------------------------------------------------------------------------
 
 int Euv::neuvac(Times time,
-		Indices indices,
-		Report &report) {
+		Indices indices) {
 
   int iErr = 0;
   precision_t slope;
 
   std::string function = "Euv::neuvac";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   precision_t f107 = indices.get_f107(time.get_current());
   precision_t f107a = indices.get_f107a(time.get_current());
@@ -393,7 +387,7 @@ int Euv::neuvac(Times time,
       neuvac_s2[iWave] * (f107_diff) +
       neuvac_int[iWave]) / wavelengths_energy[iWave];
 
-  if (report.test_verbose(4)) {
+  if (test_verbose(4)) {
     std::cout << "NEUVAC output : "
               << f107 << " " << f107a
               << " -> " << f107_diff << "\n";
@@ -406,7 +400,7 @@ int Euv::neuvac(Times time,
     }
   }
 
-  report.exit(function);
+  exit(function);
   return iErr;
 }
 
@@ -416,12 +410,11 @@ int Euv::neuvac(Times time,
 // --------------------------------------------------------------------------
 
 int Euv::solomon_hfg(Times time,
-               Indices indices,
-               Report &report) {
+               Indices indices) {
 
   std::string function = "Euv::solomon_hfg";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   int iErr = 0;
   precision_t r1;
@@ -439,7 +432,7 @@ int Euv::solomon_hfg(Times time,
        (r2 * solomon_hfg_c2[iWave])) * pcm2topm2; 
   }
 
-  if (report.test_verbose(4)) {
+  if (test_verbose(4)) {
     std::cout << "HFG output : "
               << f107 << " " << f107a << "\n";
 
@@ -451,7 +444,7 @@ int Euv::solomon_hfg(Times time,
     }
   }
 
-  report.exit(function);
+  exit(function);
   return iErr;
 }
 

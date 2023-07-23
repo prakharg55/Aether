@@ -413,11 +413,11 @@ Grid::messages_struct Grid::make_new_interconnection(int64_t iDir,
 //   5. Unpack variables from all sides
 // -----------------------------------------------------------------------------
 
-bool Neutrals::exchange(Grid &grid, Report &report) {
+bool Neutrals::exchange(Grid &grid) {
 
   std::string function = "Neutrals::exchange";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   bool DidWork = true;
 
@@ -572,7 +572,7 @@ bool Neutrals::exchange(Grid &grid, Report &report) {
   }
 
   for (int iDir = 0; iDir < 4; iDir++) {
-    if (report.test_verbose(2))
+    if (test_verbose(2))
       std::cout << "packing : " << iDir << " " << iProc
                 << " " << grid.interchanges[iDir].iProc_to
                 << " " << grid.interchanges[iDir].iTag << "\n";
@@ -611,13 +611,13 @@ bool Neutrals::exchange(Grid &grid, Report &report) {
                                 grid.interchanges[iDir].DoReverseY,
                                 grid.interchanges[iDir].XbecomesY);
     } else
-      set_horizontal_bcs(iDir, grid, report);
+      set_horizontal_bcs(iDir, grid);
   }
 
   // Wait for all processors to be done.
   MPI_Barrier(aether_comm);
 
-  report.exit(function);
+  exit(function);
 
   return DidWork;
 }

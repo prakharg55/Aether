@@ -15,8 +15,7 @@
 // -----------------------------------------------------------------------------
 
 index_file_output_struct read_omni_file(std::string omni_file,
-                                        Indices indices,
-                                        Report &report) {
+                                        Indices indices) {
 
   std::ifstream myFile;
 
@@ -24,7 +23,7 @@ index_file_output_struct read_omni_file(std::string omni_file,
 
   std::string function = "read_omni_file";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   file_contents.nTimes = 0;
   file_contents.nVars = 0;
@@ -133,7 +132,7 @@ index_file_output_struct read_omni_file(std::string omni_file,
     myFile.close();
   }
 
-  report.exit(function);
+  exit(function);
   return file_contents;
 }
 

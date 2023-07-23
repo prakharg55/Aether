@@ -14,15 +14,14 @@
 // -----------------------------------------------------------------------------
 
 index_file_output_struct read_f107_file(std::string f107_file,
-                                        Indices indices,
-                                        Report &report) {
+                                        Indices indices) {
 
   std::ifstream myFile;
   index_file_output_struct f107_contents;
 
   std::string function = "read_f107_file";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   f107_contents.nTimes = 0;
   f107_contents.nVars = 0;
@@ -53,7 +52,7 @@ index_file_output_struct read_f107_file(std::string f107_file,
 
     if (IsFound) {
 
-      if (IsAdjusted && report.test_verbose(0))
+      if (IsAdjusted && test_verbose(0))
         std::cout << "Need to NOT adjust F10.7, but that isn't included yet!!!"
                   << '\n';
 
@@ -104,6 +103,6 @@ index_file_output_struct read_f107_file(std::string f107_file,
     myFile.close();
   }
 
-  report.exit(function);
+  exit(function);
   return f107_contents;
 }

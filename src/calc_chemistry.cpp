@@ -13,14 +13,13 @@
 void Chemistry::calc_chemistry(Neutrals &neutrals,
                                Ions &ions,
                                Times time,
-                               Grid grid,
-                               Report &report) {
+                               Grid grid) {
 
   int iSpecies;
 
   std::string function = "Chemistry::calc_chemistry";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   precision_t dt = time.get_dt();
 
@@ -28,7 +27,7 @@ void Chemistry::calc_chemistry(Neutrals &neutrals,
   // Calculate electron densities
   // ------------------------------------
 
-  ions.fill_electrons(report);
+  ions.fill_electrons();
 
   // ----------------------------------------------------------
   // Initialize the sources and losses with EUV stuff:
@@ -52,7 +51,7 @@ void Chemistry::calc_chemistry(Neutrals &neutrals,
   // Calculate the chemical sources and losses
   // ----------------------------------------------------
 
-  calc_chemical_sources(neutrals, ions, report);
+  calc_chemical_sources(neutrals, ions);
 
   // ---------------------------------------------------------
   // Once sources and losses are done, solve for new densities
@@ -78,8 +77,8 @@ void Chemistry::calc_chemistry(Neutrals &neutrals,
   // Recalculate electrons
   // ---------------------------------------------------------
 
-  ions.fill_electrons(report);
+  ions.fill_electrons();
 
-  report.exit(function);
+  exit(function);
   return;
 }

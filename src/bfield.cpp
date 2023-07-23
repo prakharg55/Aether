@@ -12,15 +12,13 @@ bfield_info_type get_bfield(precision_t lon,
                             precision_t lat,
                             precision_t alt,
                             bool DoDebug,
-                            Planets planet,
-                            Inputs input,
-                            Report &report) {
+                            Planets planet) {
 
   std::string function = "get_bfield";
   static int iFunction = -1;
 
   if (DoDebug)
-    report.enter(function, iFunction);
+    enter(function, iFunction);
 
   if (lat > cPI / 2) {
     lat = cTWOPI - lat;
@@ -40,17 +38,17 @@ bfield_info_type get_bfield(precision_t lon,
 
   bfield_info_type bfield_info;
 
-  if (input.get_bfield_type() == "none") {
+  if (get_bfield_type() == "none") {
     bfield_info.b[0] = 0.0;
     bfield_info.b[1] = 0.0;
     bfield_info.b[2] = 0.0;
     bfield_info.lat = lat;
     bfield_info.lon = lon;
-  } else if (input.get_bfield_type() == "dipole")
-    bfield_info = get_dipole(lon, lat, alt, DoDebug, planet, input, report);
+  } else if (get_bfield_type() == "dipole")
+    bfield_info = get_dipole(lon, lat, alt, DoDebug, planet);
 
   if (DoDebug)
-    report.exit(function);
+    exit(function);
 
   return bfield_info;
 }
@@ -61,13 +59,11 @@ bfield_info_type get_bfield(precision_t lon,
 // -----------------------------------------------------------------------------
 
 arma_vec get_magnetic_pole(int IsNorth,
-                           Planets planet,
-                           Inputs input,
-                           Report &report) {
+                           Planets planet) {
 
   arma_vec lonlat(2, fill::zeros);
 
-  if (input.get_bfield_type() == "none") {
+  if (get_bfield_type() == "none") {
     // No magnetic field, so set location to the geo pole:
     lonlat(0) = 0.0;
 
@@ -76,7 +72,7 @@ arma_vec get_magnetic_pole(int IsNorth,
 
     else
       lonlat(1) = -cPI / 2.0;
-  } else if (input.get_bfield_type() == "dipole") {
+  } else if (get_bfield_type() == "dipole") {
     // This is an approximation right now, due to the fact that the
     // pole on some planets (including Earth), have an offset, so the
     // pole location should be altitude dependent.  For many planets,

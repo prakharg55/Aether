@@ -17,12 +17,11 @@
 // -----------------------------------------------------------------------------
 
 void Chemistry::calc_chemical_sources(Neutrals &neutrals,
-                                      Ions &ions,
-                                      Report &report) {
+                                      Ions &ions) {
 
   std::string function = "Chemistry::calc_chemical_sources";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   int64_t iReaction, iLoss, iSource;
   precision_t rate;
@@ -40,7 +39,7 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
 
   for (iReaction = 0; iReaction < nReactions; iReaction++) {
 
-    if (report.test_verbose(3)) {
+    if (test_verbose(3)) {
       std::cout << "===> Reaction : " << iReaction
                 << " of " << nReactions << "\n";
       display_reaction(reactions[iReaction]);
@@ -179,5 +178,5 @@ void Chemistry::calc_chemical_sources(Neutrals &neutrals,
     chemical_heating * cE /
     neutrals.Cv_scgc / neutrals.rho_scgc;
 
-  report.exit(function);
+  exit(function);
 }

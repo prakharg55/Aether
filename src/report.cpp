@@ -8,11 +8,29 @@
 
 #include "aether.h"
 
+int iProcReport;
+int iDefaultVerbose;
+bool doInheritVerbose;
+std::map<std::string, int> map_iFunctionVerbose;
+float TimingPercent;
+
+std::vector<item_struct> entries;
+int nEntries;
+std::string current_entry;
+int iCurrentFunction = -1;
+
+std::string divider;
+int divider_length;
+
+int iLevel;
+
+bool DoReportOnExit = true;
+
 // -----------------------------------------------------------------------
 // Initialize class Report
 // -----------------------------------------------------------------------
 
-Report::Report() {
+void Report() {
   current_entry = "";
   nEntries = 0;
   iVerbose = -2;
@@ -29,7 +47,7 @@ Report::Report() {
 // the run-time of the function can be recorded on exit.
 // -----------------------------------------------------------------------
 
-void Report::enter(std::string input, int &iFunction) {
+void enter(std::string input, int &iFunction) {
 
   int iOldStrLen = current_entry.length();
 
@@ -94,13 +112,13 @@ void Report::enter(std::string input, int &iFunction) {
 // so that the enter function sets the iCurrentFunction variable.
 // -----------------------------------------------------------------------
 
-void Report::exit(std::string input) {
+void exit(std::string input) {
 
   int iEntry = -1;
   iEntry = iCurrentFunction;
 
   if (iEntry == -1) {
-    std::cout << "Report::exit Error!!! Could not find valid entry!\n";
+    std::cout << "exit Error!!! Could not find valid entry!\n";
     std::cout << "current_entry : " << current_entry << "\n";
   } else {
 
@@ -134,7 +152,7 @@ void Report::exit(std::string input) {
 // Loop through all reported functions and report their run times
 // -----------------------------------------------------------------------
 
-void Report::times() {
+void times() {
   if (iVerbose >= 0) {
     std::cout << "Timing Summary :\n";
     float min_timing = entries[0].timing_total * TimingPercent / 100.0;
@@ -162,7 +180,7 @@ void Report::times() {
 // Print string if verbose level is set high enough
 // -----------------------------------------------------------------------
 
-void Report::print(int iLevel, std::string output_string) {
+void print(int iLevel, std::string output_string) {
   if (test_verbose(iLevel))
     std::cout << output_string << "\n";
 }
@@ -171,7 +189,7 @@ void Report::print(int iLevel, std::string output_string) {
 // Test verbose level and print line starter if it is high enough
 // -----------------------------------------------------------------------
 
-int Report::test_verbose(int iLevel) {
+int test_verbose(int iLevel) {
   int iPass = 0;
 
   if (iLevel <= iVerbose) {
@@ -190,7 +208,7 @@ int Report::test_verbose(int iLevel) {
 // Set the verbose level in the code.
 // -----------------------------------------------------------------------
 
-void Report::set_verbose(int input) {
+void set_verbose(int input) {
   iVerbose = input;
 }
 
@@ -198,7 +216,7 @@ void Report::set_verbose(int input) {
 // Set which processor will do the reporting
 // -----------------------------------------------------------------------
 
-void Report::set_iProc(int input) {
+void set_iProc(int input) {
   iProcReport = input;
 }
 
@@ -206,7 +224,7 @@ void Report::set_iProc(int input) {
 // Set the default "iVerbose" value that is passed in Aether.json
 // -----------------------------------------------------------------------
 
-void Report::set_DefaultVerbose(int input) {
+void set_DefaultVerbose(int input) {
   iDefaultVerbose = input;
 }
 
@@ -214,7 +232,7 @@ void Report::set_DefaultVerbose(int input) {
 // Set the flag to have sub-functions inherit verbose levels
 // -----------------------------------------------------------------------
 
-void Report::set_doInheritVerbose(bool input) {
+void set_doInheritVerbose(bool input) {
   doInheritVerbose = input;
 }
 
@@ -222,7 +240,7 @@ void Report::set_doInheritVerbose(bool input) {
 // Set the verbose level for the specified function
 // -----------------------------------------------------------------------
 
-void Report::set_FunctionVerbose(std::string input, int iFunctionVerbose) {
+void set_FunctionVerbose(std::string input, int iFunctionVerbose) {
   map_iFunctionVerbose[input] = iFunctionVerbose;
 }
 
@@ -230,7 +248,7 @@ void Report::set_FunctionVerbose(std::string input, int iFunctionVerbose) {
 // Set the depth to report for timing at the end of the run
 // -----------------------------------------------------------------------
 
-void Report::set_timing_depth(int input) {
+void set_timing_depth(int input) {
   iTimingDepth = input;
 }
 
@@ -238,23 +256,15 @@ void Report::set_timing_depth(int input) {
 // Set the percent to report for timing at the end of the run
 // -----------------------------------------------------------------------
 
-void Report::set_timing_percent(float input) {
+void set_timing_percent(float input) {
   TimingPercent = input;
-}
-
-// -----------------------------------------------------------------------
-// Get the verbose level
-// -----------------------------------------------------------------------
-
-int Report::get_verbose() {
-  return iVerbose;
 }
 
 // -----------------------------------------------------------------------
 // Get the default "iVerbose" that is passed in Aether.json
 // -----------------------------------------------------------------------
 
-int Report::get_DefaultVerbose() {
+int get_DefaultVerbose() {
   return iDefaultVerbose;
 }
 
@@ -262,7 +272,7 @@ int Report::get_DefaultVerbose() {
 // Get the flag to have sub-functions inherit verbose levels
 // -----------------------------------------------------------------------
 
-bool Report::get_doInheritVerbose() {
+bool get_doInheritVerbose() {
   return doInheritVerbose;
 }
 
@@ -270,7 +280,7 @@ bool Report::get_doInheritVerbose() {
 // Get the verbose level for the specified function in the code.
 // -----------------------------------------------------------------------
 
-int Report::get_FunctionVerbose(std::string input) {
+int get_FunctionVerbose(std::string input) {
   return map_iFunctionVerbose[input];
 }
 
@@ -278,7 +288,7 @@ int Report::get_FunctionVerbose(std::string input) {
 // Report student checker
 // -----------------------------------------------------------------------
 
-void Report::student_checker_function_name(bool isStudent,
+void student_checker_function_name(bool isStudent,
                                            std::string cStudentName,
                                            int iFunctionNumber,
                                            std::string cFunctionName) {

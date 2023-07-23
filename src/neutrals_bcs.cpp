@@ -23,20 +23,18 @@
 
 bool Neutrals::set_bcs(Grid grid,
                        Times time,
-                       Indices indices,
-                       Inputs input,
-                       Report &report) {
+                       Indices indices) {
 
   std::string function = "Neutrals::set_bcs";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   bool didWork;
 
-  didWork = set_lower_bcs(grid, time, indices, input, report);
-  didWork = set_upper_bcs(grid, input, report);
+  didWork = set_lower_bcs(grid, time, indices);
+  didWork = set_upper_bcs(grid);
 
-  report.exit(function);
+  exit(function);
   return didWork;
 }
 
@@ -44,13 +42,11 @@ bool Neutrals::set_bcs(Grid grid,
 // set lower boundary conditions for the neutrals
 //----------------------------------------------------------------------
 
-bool Neutrals::set_upper_bcs(Grid grid,
-                             Inputs input,
-                             Report &report) {
+bool Neutrals::set_upper_bcs(Grid grid) {
 
   std::string function = "Neutrals::set_upper_bcs";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   bool didWork = true;
 
@@ -59,7 +55,7 @@ bool Neutrals::set_upper_bcs(Grid grid,
   temperature_scgc.slice(nAlts - 2) = temperature_scgc.slice(nAlts - 3);
   temperature_scgc.slice(nAlts - 1) = temperature_scgc.slice(nAlts - 2);
 
-  report.exit(function);
+  exit(function);
   return didWork;
 }
 
@@ -69,17 +65,15 @@ bool Neutrals::set_upper_bcs(Grid grid,
 
 bool Neutrals::set_lower_bcs(Grid grid,
                              Times time,
-                             Indices indices,
-                             Inputs input,
-                             Report &report) {
+                             Indices indices) {
 
   std::string function = "Neutrals::set_lower_bcs";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   bool didWork = true;
 
-  json bcs = input.get_boundary_condition_types();
+  json bcs = get_boundary_condition_types();
 
   //-----------------------------------------------
   // MSIS BCs - only works if FORTRAN is enabled!
@@ -87,14 +81,14 @@ bool Neutrals::set_lower_bcs(Grid grid,
 
   if (bcs["type"] == "Msis") {
 
-    report.print(2, "Using MSIS for Boundary Conditions");
+    print(2, "Using MSIS for Boundary Conditions");
 
-    Msis msis(input);
+    Msis msis;
 
     if (!msis.is_ok()) {
       didWork = false;
 
-      if (report.test_verbose(0)) {
+      if (test_verbose(0)) {
         std::cout << "MSIS Boundary Conditions asked for, ";
         std::cout << "but MSIS is not compiled! Yikes!\n";
       }
@@ -118,17 +112,17 @@ bool Neutrals::set_lower_bcs(Grid grid,
       temperature_scgc.slice(0).fill(initial_temperatures[0]);
 
     for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
-      if (report.test_verbose(3))
+      if (test_verbose(3))
         std::cout << "Setting Species : " << species[iSpecies].cName << "\n";
 
       if (msis.is_valid_species(species[iSpecies].cName)) {
-        if (report.test_verbose(3))
+        if (test_verbose(3))
           std::cout << "  Found in MSIS!\n";
 
         species[iSpecies].density_scgc.slice(0) =
           msis.get_mat(species[iSpecies].cName);
       } else {
-        if (report.test_verbose(3))
+        if (test_verbose(3))
           std::cout << "  NOT Found in MSIS - setting constant\n";
 
         species[iSpecies].density_scgc.slice(0).
@@ -145,7 +139,7 @@ bool Neutrals::set_lower_bcs(Grid grid,
 
   if (bcs["type"] == "Planet") {
 
-    report.print(2, "setting lower bcs to planet");
+    print(2, "setting lower bcs to planet");
 
     // Set the lower boundary condition:
     for (int iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
@@ -159,7 +153,7 @@ bool Neutrals::set_lower_bcs(Grid grid,
 
   } // type == Planet
 
-  report.exit(function);
+  exit(function);
   return didWork;
 }
 
@@ -172,11 +166,11 @@ bool Neutrals::set_lower_bcs(Grid grid,
 //      iDir = 3 -> -y
 //----------------------------------------------------------------------
 
-bool Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid, Report &report) {
+bool Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid) {
 
   std::string function = "Neutrals::set_horizontal_bcs";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   bool didWork = true;
 
@@ -274,6 +268,6 @@ bool Neutrals::set_horizontal_bcs(int64_t iDir, Grid grid, Report &report) {
     }
   }
 
-  report.exit(function);
+  exit(function);
   return didWork;
 }

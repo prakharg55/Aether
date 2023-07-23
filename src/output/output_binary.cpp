@@ -194,13 +194,11 @@ int output(Neutrals neutrals,
            Ions ions,
            Grid grid,
            Times time,
-           Planets planet,
-           Inputs args,
-           Report &report) {
+           Planets planet) {
 
   int iErr = 0;
 
-  int nOutputs = args.get_n_outputs();
+  int nOutputs = get_n_outputs();
 
   int64_t nLons = grid.get_nLons();
   int64_t nLats = grid.get_nLats();
@@ -209,21 +207,21 @@ int output(Neutrals neutrals,
 
   std::string function = "output";
   static int iFunction = -1;
-  report.enter(function, iFunction);
+  enter(function, iFunction);
 
   for (int iOutput = 0; iOutput < nOutputs; iOutput++) {
 
-    if (time.check_time_gate(args.get_dt_output(iOutput))) {
+    if (time.check_time_gate(get_dt_output(iOutput))) {
 
-      grid.calc_sza(planet, time, report);
-      grid.calc_gse(planet, time, report);
-      grid.calc_mlt(report);
+      grid.calc_sza(planet, time);
+      grid.calc_gse(planet, time);
+      grid.calc_mlt();
 
       std::string time_string;
       std::string file_name;
       std::string file_pre;
 
-      std::string type_output = args.get_type_output(iOutput);
+      std::string type_output = get_type_output(iOutput);
       std::string output_dir = "UA/output/";
 
       if (type_output == "neutrals")
@@ -240,7 +238,7 @@ int output(Neutrals neutrals,
       file_name = output_dir + "/" + file_pre + "_" + time_string + file_ext;
 
       // Create the file:
-      report.print(0, "Writing file : " + file_name);
+      print(0, "Writing file : " + file_name);
 
       iErr = write_header(file_name,
                           type_output,
@@ -254,7 +252,7 @@ int output(Neutrals neutrals,
       file_name = output_dir + "/" + file_pre + "_" + time_string + file_ext;
 
       // Create the file:
-      report.print(0, "Writing file : " + file_name);
+      print(0, "Writing file : " + file_name);
 
       iErr = write_binary_all_3d(file_name,
                                  type_output,
@@ -267,6 +265,6 @@ int output(Neutrals neutrals,
     }  // if time check
   }  // for iOutput
 
-  report.exit(function);
+  exit(function);
   return iErr;
 }
